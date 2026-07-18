@@ -696,7 +696,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext }: Pr
               <div className="relative bg-gradient-to-br from-[#0D2B5E] to-[#0e4f7a] p-10 flex flex-col justify-center items-center text-center">
                 {/* Founder Image */}
                 <div className="w-50 h-58 rounded-full border-4 border-[#F47B20]/60 mb-6 overflow-hidden bg-white flex items-center justify-center shadow-2xl">
-                  <img src="/src/imports/Akashphoto.jpeg" alt="Akash Goyal - Founder" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&auto=format' }} />
+                  <img src="https://drive.google.com/file/d/1ZBFnoqgrrG4CVlF6TmBDnOq4vEdYuuYO/view?usp=sharing" alt="Akash Goyal - Founder" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&auto=format' }} />
                 </div>
                 <h3 className="font-display text-white text-2xl font-bold">Akash Goyal</h3>
                 <p className="text-[#F47B20] font-bold text-sm tracking-wider uppercase mt-1">Founder & Principal Advisor</p>
