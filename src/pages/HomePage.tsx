@@ -206,7 +206,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext }: Pr
       const customEvent = event as CustomEvent<{ context?: string }>
       const context = customEvent.detail?.context ?? 'general'
       setQueryContext?.(context)
-      const target = document.getElementById('contact-section')
+      const target = document.getElementById('send-query-section')
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
 
@@ -232,7 +232,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext }: Pr
 
   useEffect(() => {
     if (!queryContext || queryContext === 'general') return
-    const target = document.getElementById('contact-section')
+    const target = document.getElementById('send-query-section')
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [queryContext])
 
@@ -794,7 +794,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext }: Pr
             </div>
 
             {/* Contact Form */}
-            <div className="bg-gradient-to-br from-[#EFF6FF] to-white border border-blue-100 rounded-3xl p-8">
+            <div id="send-query-section" className="bg-gradient-to-br from-[#EFF6FF] to-white border border-blue-100 rounded-3xl p-8">
               <h3 className="font-display text-[#0D2B5E] text-xl font-bold mb-6">Send Us a Query</h3>
               {formSent ? (
                 <div className="text-center py-10">

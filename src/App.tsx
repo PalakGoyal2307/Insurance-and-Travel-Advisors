@@ -41,7 +41,7 @@ export default function App() {
   const openQueryForm = (context = 'general') => {
     setQueryContext(context)
     setPage('home')
-    window.history.replaceState({}, '', '#contact-section')
+    window.history.replaceState({}, '', '#send-query-section')
   }
 
   const isTravelPage = page === 'travel' || page.startsWith('travel-')
