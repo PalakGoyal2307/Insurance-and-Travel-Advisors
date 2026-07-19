@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import type { PageId } from '../App'
 import LogoMark from './LogoMark'
-import { CONTACT_EMAIL, PHONE_TEL, PHONE_NUMBER } from '../constants/contact'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -264,7 +263,7 @@ export default function Navbar({ navigate, openQueryForm }: Props) {
                 </div>
               )}
             </div>
-            <button onClick={() => openQueryForm?.('navbar-query')} className="block w-full text-left py-3 px-4 text-[#0D2B5E] font-bold rounded-xl hover:bg-blue-50">📧 Send a Query</button>
+            <button onClick={() => { setMobileOpen(false); openQueryForm?.('navbar-query') }} className="block w-full text-left py-3 px-4 text-[#0D2B5E] font-bold rounded-xl hover:bg-blue-50">📧 Send a Query</button>
             <button onClick={scrollToContact} className="block w-full py-3 px-4 rounded-xl font-bold text-white text-center" style={{ background: 'linear-gradient(135deg, #0D2B5E, #1a4a9e)' }}>Contact Us</button>
           </div>
         </div>
