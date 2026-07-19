@@ -27,8 +27,13 @@ export default function App() {
   const [queryContext, setQueryContext] = useState('general')
 
   useEffect(() => {
+    if (page === 'home' && queryContext !== 'general') {
+      document.getElementById('send-query-section')?.scrollIntoView({ behavior: 'auto', block: 'start' })
+      return
+    }
+
     window.scrollTo({ top: 0, behavior: 'auto' })
-  }, [page])
+  }, [page, queryContext])
 
   const navigate = (p: PageId) => {
     if (p === 'home') {
