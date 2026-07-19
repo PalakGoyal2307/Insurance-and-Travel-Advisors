@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import type { PageId } from '../App'
 import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL, LINKEDIN_URL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
-import { openEmail } from '../utils/email.ts'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -751,36 +750,23 @@ export default function HomePage({ navigate, queryContext, setQueryContext }: Pr
             <div>
               <div className="space-y-5 mb-8">
                 {[
-                  { icon: '📧', label: 'Email', value: CONTACT_EMAIL, onClick: () => openEmail(CONTACT_EMAIL) },
+                  { icon: '📧', label: 'Email', value: CONTACT_EMAIL, href: `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}` },
                   { icon: '📞', label: 'Phone', value: PHONE_NUMBER, href: `tel:${PHONE_TEL}` },
                   { icon: '📍', label: 'Address', value: 'Peaks and Protection Insurance and Travel Advisors, Lonara Road, Segaon, Madhya Pradesh 451442', href: 'https://maps.google.com?q=Peaks%20and%20Protection%20Insurance%20and%20Travel%20Advisors,%20Lonara%20Road,%20Segaon,%20Madhya%20Pradesh%20451442&ftid=0x3bd8a1abb9ca576b:0x34132163fda99fc3&entry=gps&shh=CAE&lucs=,94297699,94231188,94280568,47071704,94218641,94282134,100813464,94286869,100820247,100813014&g_st=iw' },
                 ].map(item => (
-                  'onClick' in item ? (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={item.onClick}
-                      className="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors group text-left w-full"
-                    >
-                      <span className="text-2xl">{item.icon}</span>
-                      <div>
-                        <div className="text-[#0D2B5E] font-bold text-sm">{item.label}</div>
-                        <div className="text-gray-600 text-sm group-hover:text-[#0D2B5E] transition-colors">{item.value}</div>
-                      </div>
-                    </button>
-                  ) : (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors group"
-                    >
-                      <span className="text-2xl">{item.icon}</span>
-                      <div>
-                        <div className="text-[#0D2B5E] font-bold text-sm">{item.label}</div>
-                        <div className="text-gray-600 text-sm group-hover:text-[#0D2B5E] transition-colors">{item.value}</div>
-                      </div>
-                    </a>
-                  )
+                  <a
+  key={item.label}
+  href={item.href}
+  target={item.label === "Email" ? "_blank" : undefined}
+  rel={item.label === "Email" ? "noopener noreferrer" : undefined}
+  className="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors group"
+>
+                    <span className="text-2xl">{item.icon}</span>
+                    <div>
+                      <div className="text-[#0D2B5E] font-bold text-sm">{item.label}</div>
+                      <div className="text-gray-600 text-sm group-hover:text-[#0D2B5E] transition-colors">{item.value}</div>
+                    </div>
+                  </a>
                 ))}
               </div>
 
