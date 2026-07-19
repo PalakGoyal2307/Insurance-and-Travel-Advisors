@@ -365,7 +365,7 @@ function FlightsPage({ navigate, onOpenEnquireNow, onOpenBook }: { navigate: (p:
           ))}
         </div>
         <div className="bg-[#EFF6FF] border border-blue-100 rounded-2xl p-6 text-center">
-          <p className="text-[#0D2B5E] font-bold">📞 For instant bookings, call <a href={`tel:${PHONE_TEL}`} className="text-[#F47B20] underline">{PHONE_NUMBER}</a> or email <a href={`https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}`} className="text-[#F47B20] underline">{CONTACT_EMAIL}</a></p>
+          <p className="text-[#0D2B5E] font-bold">📞 For instant bookings, call <a href={`tel:${PHONE_TEL}`} className="text-[#F47B20] underline">{PHONE_NUMBER}</a> or email <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#F47B20] underline">{CONTACT_EMAIL}</a></p>
         </div>
       </div>
     </div>

@@ -377,7 +377,7 @@ export default function ReligiousTripsPage({ navigate }: Props) {
             <button onClick={() => navigate('travel-cab')} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
               🚘 Private Cab Booking
             </button>
-            <a href={`https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}`} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
               📧 Email Us
             </a>
           </div>
