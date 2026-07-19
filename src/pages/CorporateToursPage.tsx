@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PageId } from '../App'
 import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
+import { openEmail } from '../utils/email.ts'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -407,9 +408,9 @@ export default function CorporateToursPage({ navigate }: Props) {
               <a href={`tel:${PHONE_TEL}`} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-colors">
                 📞 Call: {PHONE_NUMBER}
               </a>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-colors">
+              <button type="button" onClick={() => openEmail(CONTACT_EMAIL)} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-colors">
                 📧 Email: {CONTACT_EMAIL}
-              </a>
+              </button>
             </div>
           </div>
         </div>

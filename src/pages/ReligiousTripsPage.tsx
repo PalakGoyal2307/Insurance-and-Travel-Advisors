@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PageId } from '../App'
 import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL } from '../constants/contact'
+import { openEmail } from '../utils/email.ts'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -377,9 +378,9 @@ export default function ReligiousTripsPage({ navigate }: Props) {
             <button onClick={() => navigate('travel-cab')} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
               🚘 Private Cab Booking
             </button>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
+            <button type="button" onClick={() => openEmail(CONTACT_EMAIL)} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">
               📧 Email Us
-            </a>
+            </button>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PageId } from '../App'
 import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
+import { openEmail } from '../utils/email.ts'
 
 interface Props {
   page: PageId
@@ -365,7 +366,7 @@ function FlightsPage({ navigate, onOpenEnquireNow, onOpenBook }: { navigate: (p:
           ))}
         </div>
         <div className="bg-[#EFF6FF] border border-blue-100 rounded-2xl p-6 text-center">
-          <p className="text-[#0D2B5E] font-bold">📞 For instant bookings, call <a href={`tel:${PHONE_TEL}`} className="text-[#F47B20] underline">{PHONE_NUMBER}</a> or email <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#F47B20] underline">{CONTACT_EMAIL}</a></p>
+          <p className="text-[#0D2B5E] font-bold">📞 For instant bookings, call <a href={`tel:${PHONE_TEL}`} className="text-[#F47B20] underline">{PHONE_NUMBER}</a> or email <button type="button" onClick={() => openEmail(CONTACT_EMAIL)} className="text-[#F47B20] underline">{CONTACT_EMAIL}</button></p>
         </div>
       </div>
     </div>
