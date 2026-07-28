@@ -100,7 +100,7 @@ npm run dev
 
 ## 4. API Endpoints (Module 1)
 
-Base URL: `https://pnpadvisors.co.in/`
+Base URL: `https://pnp-advisors-backend.onrender.com`
 
 ### Health
 
