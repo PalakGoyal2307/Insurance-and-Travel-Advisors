@@ -100,7 +100,7 @@ npm run dev
 
 ## 4. API Endpoints (Module 1)
 
-Base URL: `http://localhost:5000/api`
+Base URL: `https://pnpadvisors.co.in/`
 
 ### Health
 
