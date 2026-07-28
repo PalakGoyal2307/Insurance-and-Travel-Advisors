@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pnp-advisors-backend.onrender.com'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pnp-advisors-backend.onrender.com/api'
 
 export class ApiRequestError extends Error {
   statusCode: number
