@@ -1,0 +1,10 @@
+{
+  "description": "Offers comprehensive travel and insurance solutions with detailed packages, dynamic visuals, and easy contact options for seamless planning and protection.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
