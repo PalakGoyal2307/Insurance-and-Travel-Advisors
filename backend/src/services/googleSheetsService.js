@@ -1,7 +1,7 @@
 import { google } from 'googleapis'
 import { env } from '../config/env.js'
 
-const DEFAULT_SHEET_NAME = env.googleSheetsSheetName || 'Form Submissions'
+const DEFAULT_SPREADSHEET_TITLE = env.googleSheetsSheetName || 'Form Submissions'
 const SENSITIVE_FIELDS = new Set([
   'password',
   'confirmPassword',
@@ -16,32 +16,7 @@ const SENSITIVE_FIELDS = new Set([
   'apiKey',
   'api_key',
 ])
-
-const CORE_FIELDS = [
-  'fullName',
-  'name',
-  'email',
-  'phone',
-  'mobile',
-  'dob',
-  'dateOfBirth',
-  'heightFeet',
-  'heightInch',
-  'weightKg',
-  'weight',
-  'address',
-  'pincode',
-  'gender',
-  'relation',
-  'pan',
-  'panNumber',
-  'aadhaar',
-  'aadhaarNumber',
-  'occupation',
-  'annualIncome',
-  'smoking',
-  'medicalHistory',
-]
+const DOCUMENT_FIELD_PATTERN = /(document|documents|file|files|attachment|attachments|upload|uploads|proof|proofs)/i
 
 let cachedSheetsClient = null
 let cachedSpreadsheetId = null
@@ -81,9 +56,9 @@ const getSpreadsheetId = async () => {
   const createResponse = await sheets.spreadsheets.create({
     requestBody: {
       properties: {
-        title: DEFAULT_SHEET_NAME,
+        title: DEFAULT_SPREADSHEET_TITLE,
       },
-      sheets: [{ properties: { title: env.googleSheetsSheetName || 'Form Submissions' } }],
+      sheets: [{ properties: { title: 'Registration' } }],
     },
   })
 
@@ -91,8 +66,30 @@ const getSpreadsheetId = async () => {
   return cachedSpreadsheetId
 }
 
-const ensureSheetExists = async (sheets, spreadsheetId) => {
-  const sheetName = env.googleSheetsSheetName || 'Form Submissions'
+const sanitizeSheetName = (value) => {
+  const cleaned = String(value || 'Other Forms')
+    .replace(/[\\/*\[\]:?]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  return cleaned.slice(0, 100) || 'Other Forms'
+}
+
+const getSheetName = (formType) => {
+  const normalized = String(formType || '').toLowerCase()
+
+  if (normalized.includes('life')) return 'Life Insurance'
+  if (normalized.includes('health')) return 'Health Insurance'
+  if (normalized.includes('general')) return 'General Insurance'
+  if (normalized.includes('register')) return 'Registration'
+  if (normalized.includes('contact')) return 'Contact Form'
+  if (normalized.includes('profile')) return 'Profile'
+  if (normalized.includes('login')) return 'Login'
+
+  return 'Other Forms'
+}
+
+const ensureSheetExists = async (sheets, spreadsheetId, sheetName) => {
   const metadataResponse = await sheets.spreadsheets.get({ spreadsheetId })
   const existingSheet = metadataResponse.data.sheets?.find((sheet) => sheet.properties?.title === sheetName)
 
@@ -138,118 +135,96 @@ const normalizeValue = (value) => {
   return JSON.stringify(value)
 }
 
-const findValue = (source, aliases) => {
+const shouldSkipField = (fieldName) => {
+  const normalized = String(fieldName || '').toLowerCase()
+  return SENSITIVE_FIELDS.has(normalized) || DOCUMENT_FIELD_PATTERN.test(normalized)
+}
+
+const flattenPayload = (source, prefix = '') => {
+  if (Array.isArray(source)) {
+    return source.flatMap((item, index) => flattenPayload(item, `${prefix}[${index}]`))
+  }
+
   if (!source || typeof source !== 'object') {
-    return ''
+    return []
   }
 
-  for (const alias of aliases) {
-    const value = source[alias]
-    if (value !== undefined && value !== null && value !== '') {
-      return normalizeValue(value)
+  return Object.entries(source).flatMap(([fieldName, value]) => {
+    const nextPrefix = prefix ? `${prefix}_${fieldName}` : fieldName
+
+    if (shouldSkipField(nextPrefix)) {
+      return []
     }
-  }
 
-  return ''
+    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      return flattenPayload(value, nextPrefix)
+    }
+
+    return [{ header: nextPrefix, value }]
+  })
 }
 
 const collectStructuredValues = (payload) => {
   const values = {}
-  const addField = (fieldName, value) => {
+
+  flattenPayload(payload).forEach(({ header, value }) => {
     if (value === undefined || value === null || value === '') {
       return
     }
 
-    values[fieldName] = normalizeValue(value)
-  }
-
-  for (const fieldName of CORE_FIELDS) {
-    const directValue = findValue(payload, [fieldName])
-    if (directValue) {
-      addField(fieldName, directValue)
-    }
-  }
-
-  for (const fieldName of ['fullName', 'name', 'email', 'phone', 'mobile', 'dob', 'dateOfBirth', 'heightFeet', 'heightInch', 'weightKg', 'weight', 'address', 'pincode', 'gender', 'relation', 'pan', 'panNumber', 'aadhaar', 'aadhaarNumber', 'occupation', 'annualIncome', 'smoking', 'medicalHistory']) {
-    if (payload[fieldName] !== undefined && payload[fieldName] !== null && payload[fieldName] !== '') {
-      addField(fieldName, payload[fieldName])
-    }
-  }
-
-  if (payload.primaryMember && typeof payload.primaryMember === 'object') {
-    const primaryMember = payload.primaryMember
-    addField('primaryMember_fullName', findValue(primaryMember, ['fullName', 'name']))
-    addField('primaryMember_email', findValue(primaryMember, ['email']))
-    addField('primaryMember_phone', findValue(primaryMember, ['phone', 'mobile']))
-    addField('primaryMember_dob', findValue(primaryMember, ['dob', 'dateOfBirth']))
-    addField('primaryMember_heightFeet', findValue(primaryMember, ['heightFeet']))
-    addField('primaryMember_heightInch', findValue(primaryMember, ['heightInch']))
-    addField('primaryMember_weightKg', findValue(primaryMember, ['weightKg', 'weight']))
-    addField('primaryMember_address', findValue(primaryMember, ['address']))
-    addField('primaryMember_pincode', findValue(primaryMember, ['pincode']))
-    addField('primaryMember_gender', findValue(primaryMember, ['gender']))
-    addField('primaryMember_relation', findValue(primaryMember, ['relation']))
-    addField('primaryMember_pan', findValue(primaryMember, ['pan', 'panNumber']))
-    addField('primaryMember_aadhaar', findValue(primaryMember, ['aadhaar', 'aadhaarNumber']))
-    addField('primaryMember_occupation', findValue(primaryMember, ['occupation']))
-    addField('primaryMember_annualIncome', findValue(primaryMember, ['annualIncome']))
-    addField('primaryMember_smoking', findValue(primaryMember, ['smoking']))
-    addField('primaryMember_medicalHistory', findValue(primaryMember, ['medicalHistory']))
-  }
-
-  if (Array.isArray(payload.additionalMembers)) {
-    payload.additionalMembers.forEach((member, index) => {
-      if (!member || typeof member !== 'object') {
-        return
-      }
-
-      const prefix = `additionalMember_${index + 1}`
-      addField(`${prefix}_fullName`, findValue(member, ['fullName', 'name']))
-      addField(`${prefix}_email`, findValue(member, ['email']))
-      addField(`${prefix}_phone`, findValue(member, ['phone', 'mobile']))
-      addField(`${prefix}_dob`, findValue(member, ['dob', 'dateOfBirth']))
-      addField(`${prefix}_heightFeet`, findValue(member, ['heightFeet']))
-      addField(`${prefix}_heightInch`, findValue(member, ['heightInch']))
-      addField(`${prefix}_weightKg`, findValue(member, ['weightKg', 'weight']))
-      addField(`${prefix}_address`, findValue(member, ['address']))
-      addField(`${prefix}_pincode`, findValue(member, ['pincode']))
-      addField(`${prefix}_gender`, findValue(member, ['gender']))
-      addField(`${prefix}_relation`, findValue(member, ['relation']))
-      addField(`${prefix}_pan`, findValue(member, ['pan', 'panNumber']))
-      addField(`${prefix}_aadhaar`, findValue(member, ['aadhaar', 'aadhaarNumber']))
-      addField(`${prefix}_occupation`, findValue(member, ['occupation']))
-      addField(`${prefix}_annualIncome`, findValue(member, ['annualIncome']))
-      addField(`${prefix}_smoking`, findValue(member, ['smoking']))
-      addField(`${prefix}_medicalHistory`, findValue(member, ['medicalHistory']))
-    })
-  }
+    values[header] = normalizeValue(value)
+  })
 
   return values
 }
 
+const columnLetter = (index) => {
+  let remaining = index
+  let letters = ''
+
+  while (remaining > 0) {
+    remaining -= 1
+    letters = String.fromCharCode(65 + (remaining % 26)) + letters
+    remaining = Math.floor(remaining / 26)
+  }
+
+  return letters || 'A'
+}
+
 const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => {
+  const normalizedHeaders = Array.from(new Set(headers.filter(Boolean)))
+  if (normalizedHeaders.length === 0) {
+    return []
+  }
+
   try {
     const existingValues = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A1:Z1`,
+      range: `${sheetName}!1:1`,
     })
 
-    if (!existingValues.data.values || existingValues.data.values.length === 0) {
+    const existingHeaders = existingValues.data.values?.[0] || []
+    const mergedHeaders = Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
+
+    if (existingHeaders.length !== mergedHeaders.length || existingHeaders.some((header, index) => header !== mergedHeaders[index])) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${sheetName}!A1:${String.fromCharCode(64 + Math.min(headers.length, 26))}1`,
+        range: `${sheetName}!1:${columnLetter(mergedHeaders.length)}1`,
         valueInputOption: 'RAW',
         requestBody: {
-          values: [headers],
+          values: [mergedHeaders],
         },
       })
     }
+
+    return mergedHeaders
   } catch (error) {
     console.error('Failed to initialize Google Sheets headers:', error)
+    return normalizedHeaders
   }
 }
 
-export const appendFormSubmission = async ({ route, method, formType, payload }) => {
+export const appendFormSubmission = async ({ formType, payload }) => {
   if (!payload || typeof payload !== 'object') {
     return null
   }
@@ -259,13 +234,13 @@ export const appendFormSubmission = async ({ route, method, formType, payload })
     return null
   }
 
-  const headers = Object.keys(values)
-  const row = headers.map((header) => values[header])
-
   const sheets = getSheetsClient()
   const spreadsheetId = await getSpreadsheetId()
-  const sheetName = await ensureSheetExists(sheets, spreadsheetId)
-  await ensureSheetHeaders(sheets, spreadsheetId, sheetName, headers)
+  const sheetName = sanitizeSheetName(getSheetName(formType))
+  await ensureSheetExists(sheets, spreadsheetId, sheetName)
+
+  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
+  const row = headers.map((header) => values[header] ?? '')
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
