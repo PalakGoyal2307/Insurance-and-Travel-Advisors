@@ -75,6 +75,7 @@ npm install
    - `MONGODB_URI`
    - `JWT_ACCESS_SECRET`
    - `FRONTEND_URL`
+   - Google service account values for Drive/Sheets (`GOOGLE_DRIVE_CLIENT_EMAIL`, `GOOGLE_DRIVE_PRIVATE_KEY`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_SHEET_NAME`)
    - admin seed values
 
 5. Create/update admin account:
@@ -189,6 +190,7 @@ Base URL: `https://pnp-advisors-backend.onrender.com/api`
 ## 7. What Comes Next (Module 2)
 
 - Google Drive API integration
+- Google Sheets submission logging for registrations and forms
 - User document upload model and APIs
 - One-time upload + replace/view logic
 - Folder structure automation in Drive:

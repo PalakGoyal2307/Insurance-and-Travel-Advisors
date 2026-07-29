@@ -30,6 +30,8 @@ export const env = {
     ? process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n')
     : '',
   googleDriveRootFolderId: process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '',
+  googleSheetsSpreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '',
+  googleSheetsSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME || 'Form Submissions',
   smtpHost: process.env.SMTP_HOST || '',
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpSecure: parseBoolean(process.env.SMTP_SECURE, false),
