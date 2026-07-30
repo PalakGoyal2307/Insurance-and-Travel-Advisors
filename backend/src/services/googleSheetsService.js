@@ -4,7 +4,7 @@ import { env } from '../config/env.js'
 const DEFAULT_SPREADSHEET_TITLE = env.googleSheetsSheetName || 'Form Submissions'
 const MAX_ADDITIONAL_MEMBERS = 3
 const INSURANCE_SHEET_NAMES = ['Health Insurance', 'Life Insurance']
-const INSURANCE_TOP_LEVEL_HEADERS = ['Name', 'Email', 'Phone', 'Plan Name', 'Source Context']
+const INSURANCE_TOP_LEVEL_HEADERS = ['Name', 'Email', 'Phone', 'Plan Name']
 const SENSITIVE_FIELDS = new Set([
   'password',
   'confirmPassword',
@@ -63,12 +63,7 @@ const INSURANCE_MEMBER_FIELD_HEADERS = [
   'Weight',
   'Address',
   'Pincode',
-  'Gender',
   'Relation',
-  'Occupation',
-  'Annual Income',
-  'Smoking',
-  'Medical History',
   'Disease Mode',
   'Diseases',
   'Other Disease',
@@ -350,7 +345,8 @@ const columnLetter = (index) => {
   return letters || 'A'
 }
 
-const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => {
+const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers, options = {}) => {
+  const { strict = false } = options
   const normalizedHeaders = Array.from(new Set(headers.filter(Boolean)))
   if (normalizedHeaders.length === 0) {
     return []
@@ -364,7 +360,7 @@ const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => 
 
     const existingHeadersRaw = existingValues.data.values?.[0] || []
     const existingHeaders = Array.from(new Set(existingHeadersRaw.filter(Boolean).map((header) => String(header).trim()).filter(Boolean)))
-    const mergedHeaders = Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
+    const mergedHeaders = strict ? normalizedHeaders : Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
 
     // Always rewrite headers from A1 so shifted/blank leading columns are corrected.
     await sheets.spreadsheets.values.clear({
@@ -403,8 +399,10 @@ export const appendFormSubmission = async ({ formType, payload }) => {
   const sheetName = sanitizeSheetName(getSheetName(formType))
   await ensureSheetExists(sheets, spreadsheetId, sheetName)
 
-  const fixedHeaders = isInsuranceFormPayload(formType, payload) ? getInsuranceFixedHeaders() : []
-  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, [...fixedHeaders, ...Object.keys(values)])
+  const isInsurance = isInsuranceFormPayload(formType, payload)
+  const headers = isInsurance
+    ? await ensureSheetHeaders(sheets, spreadsheetId, sheetName, getInsuranceFixedHeaders(), { strict: true })
+    : await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
   const row = headers.map((header) => values[header] ?? '')
 
   await sheets.spreadsheets.values.append({
@@ -433,7 +431,7 @@ export const initializeInsuranceSheetHeaders = async () => {
 
   for (const sheetName of INSURANCE_SHEET_NAMES) {
     await ensureSheetExists(sheets, spreadsheetId, sheetName)
-    await ensureSheetHeaders(sheets, spreadsheetId, sheetName, fixedHeaders)
+    await ensureSheetHeaders(sheets, spreadsheetId, sheetName, fixedHeaders, { strict: true })
   }
 
   return {
