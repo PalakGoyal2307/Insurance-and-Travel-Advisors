@@ -7,24 +7,24 @@ const documentTypeValues = Object.keys(DOCUMENT_TYPES)
 const isValidLifeYearLabel = (value, type) => {
   if (!value) return false
   const regex = type === 'itrDocument'
-    ? /^member\d+-itr-year-[1-3]$/i
-    : /^member\d+-computation-year-[1-3]$/i
+    ? /^member[1-4]-itr-year-[1-3]$/i
+    : /^member[1-4]-computation-year-[1-3]$/i
   return regex.test(value)
 }
 
 const isValidAadhaarLabel = (value) => {
   if (!value) return true
-  return /^member\d+-aadhaar-(single|front|back)$/i.test(value) || /^member\d+-nominee-aadhaar$/i.test(value)
+  return /^member[1-4]-aadhaar-(single|front|back)$/i.test(value) || /^member[1-4]-nominee-aadhaar$/i.test(value)
 }
 
 const isValidPanLabel = (value) => {
   if (!value) return true
-  return /^member\d+-pan$/i.test(value) || /^member\d+-nominee-pan$/i.test(value)
+  return /^member[1-4]-pan$/i.test(value) || /^member[1-4]-nominee-pan$/i.test(value)
 }
 
 const isValidBankProofLabel = (value) => {
   if (!value) return true
-  return /^member\d+-bank-proof$/i.test(value) || /^member\d+-nominee-bank-proof$/i.test(value)
+  return /^member[1-4]-bank-proof$/i.test(value) || /^member[1-4]-nominee-bank-proof$/i.test(value)
 }
 
 export const uploadDocumentValidator = [

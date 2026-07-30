@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import DocumentUploadButton from './DocumentUploadButton'
 import type { InsuranceMemberPayload } from '../utils/insuranceApi'
 import { getDocumentDownloadUrl, getDocumentViewUrl, type ProfileDocumentItem } from '../utils/documentApi'
+import { normalizeAadhaarOcrPayload, type AadhaarOcrPayload } from '../utils/aadhaarOcr'
 
 type InsuranceKind = 'health' | 'life'
 type DiseaseMode = 'notApplicable' | 'listed'
@@ -168,6 +169,68 @@ const getSubjectGroup = (index: number, isNominee = false) => {
   return index === 0 ? 'Primary Member' : `Member ${index + 1}`
 }
 
+const applyAadhaarOcrToMember = ({
+  member,
+  index,
+  ocrPayload,
+}: {
+  member: MemberState
+  index: number
+  ocrPayload?: AadhaarOcrPayload | null
+}) => {
+  const normalized = normalizeAadhaarOcrPayload(ocrPayload)
+  if (!normalized) {
+    return {
+      nextMember: member,
+      warning: 'Aadhaar OCR could not detect text clearly. Please verify details manually.',
+    }
+  }
+
+  const isPrimary = index === 0
+  const nextMember = { ...member }
+
+  if (normalized.dob && isValidDobString(normalized.dob)) {
+    nextMember.dob = normalized.dob
+    nextMember.age = calculateAgeFromDob(normalized.dob)
+  }
+
+  if (isPrimary) {
+    if (normalized.pincode && /^\d{6}$/.test(normalized.pincode)) {
+      nextMember.pincode = normalized.pincode
+    }
+
+    const missingPrimaryFields = []
+    if (!normalized.dob) missingPrimaryFields.push('DOB')
+    if (!normalized.pincode) missingPrimaryFields.push('pincode')
+
+    if (missingPrimaryFields.length > 0) {
+      return {
+        nextMember,
+        warning: `Member ${index + 1}: OCR could not detect ${missingPrimaryFields.join(' and ')} from Aadhaar. Please enter manually.`,
+      }
+    }
+
+    return { nextMember, warning: '' }
+  }
+
+  if (normalized.name && normalized.name.length >= 2) {
+    nextMember.fullName = normalized.name
+  }
+
+  const missingOtherFields = []
+  if (!normalized.dob) missingOtherFields.push('DOB')
+  if (!normalized.name) missingOtherFields.push('name')
+
+  if (missingOtherFields.length > 0) {
+    return {
+      nextMember,
+      warning: `Member ${index + 1}: OCR could not detect ${missingOtherFields.join(' and ')} from Aadhaar. Please enter manually.`,
+    }
+  }
+
+  return { nextMember, warning: '' }
+}
+
 const createPrimaryMemberFromExistingDocuments = (kind: InsuranceKind, documents: ProfileDocumentItem[], primaryFullName = '') => {
   const member = createEmptyMember(primaryFullName)
 
@@ -255,6 +318,44 @@ export default function MemberInsuranceModal({
 
   const updateMember = (index: number, updater: (member: MemberState) => MemberState) => {
     setMembers((prev) => prev.map((member, memberIndex) => (memberIndex === index ? updater(member) : member)))
+  }
+
+  const handleAadhaarUploaded = ({
+    index,
+    field,
+    uploadedId,
+    ocrPayload,
+  }: {
+    index: number
+    field: 'aadhaarSingleId' | 'aadhaarFrontId' | 'aadhaarBackId'
+    uploadedId?: string
+    ocrPayload?: AadhaarOcrPayload | null
+  }) => {
+    let warningMessage = ''
+
+    setMembers((prev) => prev.map((member, memberIndex) => {
+      if (memberIndex !== index) return member
+
+      const { nextMember, warning } = applyAadhaarOcrToMember({
+        member,
+        index,
+        ocrPayload,
+      })
+
+      warningMessage = warning
+
+      return {
+        ...nextMember,
+        [field]: uploadedId || nextMember[field],
+      }
+    }))
+
+    if (warningMessage) {
+      setLocalError(warningMessage)
+      return
+    }
+
+    setLocalError('')
   }
 
   const addMember = () => {
@@ -526,6 +627,100 @@ export default function MemberInsuranceModal({
                   )}
                 </div>
 
+                <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
+                  <div className="required-label text-sm font-bold text-[#0D2B5E]">Aadhaar Card Upload</div>
+                  <div className="text-xs text-gray-600">
+                    OCR auto-fill: Primary member -&gt; DOB + pincode. Other members -&gt; name + DOB.
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={member.aadhaarMode === 'single'}
+                        onChange={() => updateMember(index, (current) => ({ ...current, aadhaarMode: 'single', aadhaarFrontId: '', aadhaarBackId: '' }))}
+                      />
+                      Single Upload (front/back in one image)
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={member.aadhaarMode === 'frontBack'}
+                        onChange={() => updateMember(index, (current) => ({ ...current, aadhaarMode: 'frontBack', aadhaarSingleId: '' }))}
+                      />
+                      Separate Front + Back Upload
+                    </label>
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    Aadhaar PDF rule: Single upload allows up to 2 pages. Front/Back uploads must each be 1 page.
+                  </div>
+
+                  {member.aadhaarMode === 'single' ? (
+                    <div>
+                      <DocumentUploadButton
+                        label={`Member ${memberNumber} Aadhaar Single`}
+                        documentType="aadhaarCard"
+                        customLabel={`${baseLabel}-aadhaar-single`}
+                        scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-single`)}
+                        subjectName={member.fullName.trim() || `Member ${memberNumber}`}
+                        subjectGroup={getSubjectGroup(index)}
+                        buttonText={member.aadhaarSingleId ? 'Replace Aadhaar Single' : 'Upload Aadhaar Single'}
+                        onUploaded={(id, _file, ocrPayload) =>
+                          handleAadhaarUploaded({
+                            index,
+                            field: 'aadhaarSingleId',
+                            uploadedId: id,
+                            ocrPayload,
+                          })
+                        }
+                      />
+                      {renderDocumentActions(member.aadhaarSingleId)}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      <div>
+                        <DocumentUploadButton
+                          label={`Member ${memberNumber} Aadhaar Front`}
+                          documentType="aadhaarCard"
+                          customLabel={`${baseLabel}-aadhaar-front`}
+                          scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-front`)}
+                          subjectName={member.fullName.trim() || `Member ${memberNumber}`}
+                          subjectGroup={getSubjectGroup(index)}
+                          buttonText={member.aadhaarFrontId ? 'Replace Aadhaar Front' : 'Upload Aadhaar Front'}
+                          onUploaded={(id, _file, ocrPayload) =>
+                            handleAadhaarUploaded({
+                              index,
+                              field: 'aadhaarFrontId',
+                              uploadedId: id,
+                              ocrPayload,
+                            })
+                          }
+                        />
+                        {renderDocumentActions(member.aadhaarFrontId)}
+                      </div>
+                      <div>
+                        <DocumentUploadButton
+                          label={`Member ${memberNumber} Aadhaar Back`}
+                          documentType="aadhaarCard"
+                          customLabel={`${baseLabel}-aadhaar-back`}
+                          scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-back`)}
+                          subjectName={member.fullName.trim() || `Member ${memberNumber}`}
+                          subjectGroup={getSubjectGroup(index)}
+                          buttonText={member.aadhaarBackId ? 'Replace Aadhaar Back' : 'Upload Aadhaar Back'}
+                          onUploaded={(id, _file, ocrPayload) =>
+                            handleAadhaarUploaded({
+                              index,
+                              field: 'aadhaarBackId',
+                              uploadedId: id,
+                              ocrPayload,
+                            })
+                          }
+                        />
+                        {renderDocumentActions(member.aadhaarBackId)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1.5">
                     <label className="required-label text-xs font-bold text-[#0D2B5E]">Full Name</label>
@@ -611,76 +806,6 @@ export default function MemberInsuranceModal({
                     <label className="required-label text-xs font-bold text-[#0D2B5E]">Weight (kg)</label>
                     <input value={member.weightKg} type="number" min={1} max={400} onChange={(event) => updateMember(index, (current) => ({ ...current, weightKg: event.target.value }))} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Weight (kg)" required />
                   </div>
-                </div>
-
-                <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
-                  <div className="required-label text-sm font-bold text-[#0D2B5E]">Aadhaar Card Upload</div>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={member.aadhaarMode === 'single'}
-                        onChange={() => updateMember(index, (current) => ({ ...current, aadhaarMode: 'single', aadhaarFrontId: '', aadhaarBackId: '' }))}
-                      />
-                      Single Upload (front/back in one image)
-                    </label>
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={member.aadhaarMode === 'frontBack'}
-                        onChange={() => updateMember(index, (current) => ({ ...current, aadhaarMode: 'frontBack', aadhaarSingleId: '' }))}
-                      />
-                      Separate Front + Back Upload
-                    </label>
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    Aadhaar PDF rule: Single upload allows up to 2 pages. Front/Back uploads must each be 1 page.
-                  </div>
-
-                  {member.aadhaarMode === 'single' ? (
-                    <div>
-                      <DocumentUploadButton
-                        label={`Member ${memberNumber} Aadhaar Single`}
-                        documentType="aadhaarCard"
-                        customLabel={`${baseLabel}-aadhaar-single`}
-                        scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-single`)}
-                        subjectName={member.fullName.trim() || `Member ${memberNumber}`}
-                        subjectGroup={getSubjectGroup(index)}
-                        buttonText={member.aadhaarSingleId ? 'Replace Aadhaar Single' : 'Upload Aadhaar Single'}
-                        onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarSingleId: id || current.aadhaarSingleId }))}
-                      />
-                      {renderDocumentActions(member.aadhaarSingleId)}
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-3">
-                      <div>
-                        <DocumentUploadButton
-                          label={`Member ${memberNumber} Aadhaar Front`}
-                          documentType="aadhaarCard"
-                          customLabel={`${baseLabel}-aadhaar-front`}
-                          scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-front`)}
-                          subjectName={member.fullName.trim() || `Member ${memberNumber}`}
-                          subjectGroup={getSubjectGroup(index)}
-                          buttonText={member.aadhaarFrontId ? 'Replace Aadhaar Front' : 'Upload Aadhaar Front'}
-                          onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarFrontId: id || current.aadhaarFrontId }))}
-                        />
-                        {renderDocumentActions(member.aadhaarFrontId)}
-                      </div>
-                      <div>
-                        <DocumentUploadButton
-                          label={`Member ${memberNumber} Aadhaar Back`}
-                          documentType="aadhaarCard"
-                          customLabel={`${baseLabel}-aadhaar-back`}
-                          scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-back`)}
-                          subjectName={member.fullName.trim() || `Member ${memberNumber}`}
-                          subjectGroup={getSubjectGroup(index)}
-                          buttonText={member.aadhaarBackId ? 'Replace Aadhaar Back' : 'Upload Aadhaar Back'}
-                          onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarBackId: id || current.aadhaarBackId }))}
-                        />
-                        {renderDocumentActions(member.aadhaarBackId)}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
