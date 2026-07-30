@@ -17,6 +17,26 @@ const SENSITIVE_FIELDS = new Set([
   'api_key',
 ])
 const DOCUMENT_FIELD_PATTERN = /(document|documents|file|files|attachment|attachments|upload|uploads|proof|proofs)/i
+const MAX_ADDITIONAL_MEMBERS = 3
+const MEMBER_BASE_FIELDS = [
+  'fullName',
+  'email',
+  'phone',
+  'dob',
+  'heightFeet',
+  'heightInch',
+  'weightKg',
+  'address',
+  'pincode',
+  'gender',
+  'relation',
+  'pan',
+  'aadhaar',
+  'occupation',
+  'annualIncome',
+  'smoking',
+  'medicalHistory',
+]
 const FIELD_LABELS = {
   fullName: 'Name',
   name: 'Name',
@@ -226,6 +246,30 @@ const addDiseaseEntries = (values, memberLabel, member) => {
   addEntry(values, `${memberLabel} Other Disease`, otherText)
 }
 
+const getMemberHeadersForLabel = (memberLabel) => {
+  const baseHeaders = MEMBER_BASE_FIELDS.map((fieldName) => makeHeader(memberLabel, fieldName))
+  return [...baseHeaders, `${memberLabel} Disease Mode`, `${memberLabel} Diseases`, `${memberLabel} Other Disease`]
+}
+
+const shouldIncludeFixedMemberHeaders = (formType, payload) => {
+  const normalizedFormType = String(formType || '').toLowerCase()
+  if (normalizedFormType.includes('health') || normalizedFormType.includes('life')) {
+    return true
+  }
+
+  return Boolean(payload?.primaryMember) || Array.isArray(payload?.additionalMembers)
+}
+
+const getFixedMemberHeaders = () => {
+  const headers = [...getMemberHeadersForLabel('Primary Member')]
+
+  for (let index = 1; index <= MAX_ADDITIONAL_MEMBERS; index += 1) {
+    headers.push(...getMemberHeadersForLabel(`Member ${index}`))
+  }
+
+  return headers
+}
+
 const collectStructuredValues = (payload) => {
   const values = {}
 
@@ -359,7 +403,8 @@ export const appendFormSubmission = async ({ formType, payload }) => {
   const sheetName = sanitizeSheetName(getSheetName(formType))
   await ensureSheetExists(sheets, spreadsheetId, sheetName)
 
-  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
+  const fixedMemberHeaders = shouldIncludeFixedMemberHeaders(formType, payload) ? getFixedMemberHeaders() : []
+  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, [...Object.keys(values), ...fixedMemberHeaders])
   const row = headers.map((header) => values[header] ?? '')
 
   await sheets.spreadsheets.values.append({
