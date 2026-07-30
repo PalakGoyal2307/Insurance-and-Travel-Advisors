@@ -178,6 +178,14 @@ const findValue = (source, aliases) => {
   for (const alias of aliases) {
     const value = source[alias]
     if (value !== undefined && value !== null && value !== '') {
+      if (Array.isArray(value)) {
+        continue
+      }
+
+      if (typeof value === 'object' && !(value instanceof Date)) {
+        continue
+      }
+
       return normalizeValue(value)
     }
   }
@@ -288,18 +296,21 @@ const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => 
       range: `${sheetName}!1:1`,
     })
 
-    const existingHeaders = existingValues.data.values?.[0] || []
-    if (existingHeaders.length === 0) {
+    const existingHeadersRaw = existingValues.data.values?.[0] || []
+    const existingHeaders = Array.from(new Set(existingHeadersRaw.filter(Boolean)))
+    const mergedHeaders = Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
+
+    if (existingHeaders.length === 0 || mergedHeaders.length !== existingHeadersRaw.length || mergedHeaders.some((header, index) => header !== existingHeadersRaw[index])) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${sheetName}!1:${columnLetter(normalizedHeaders.length)}1`,
+        range: `${sheetName}!1:${columnLetter(mergedHeaders.length)}1`,
         valueInputOption: 'RAW',
         requestBody: {
-          values: [normalizedHeaders],
+          values: [mergedHeaders],
         },
       })
 
-      return normalizedHeaders
+      return mergedHeaders
     }
 
     return existingHeaders
