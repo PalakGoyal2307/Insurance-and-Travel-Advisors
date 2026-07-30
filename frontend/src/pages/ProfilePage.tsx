@@ -47,6 +47,17 @@ const getReadableDocumentLabel = (document: { label: string; documentType: strin
   return 'Aadhaar Card'
 }
 
+const getDocumentSubjectGroup = (document: { customLabel?: string; scope: 'profile' | 'health' | 'life' | 'general' }) => {
+  const customLabel = String(document.customLabel || '').toLowerCase()
+  if (customLabel.includes('nominee-')) return 'Nominee Documents'
+
+  const memberTag = formatMemberTag(customLabel)
+  if (memberTag) return `${memberTag} Documents`
+
+  if (document.scope === 'profile') return 'Profile Documents'
+  return 'Primary Member'
+}
+
 export default function ProfilePage({ navigate, user, onProfileUpdated }: Props) {
   const [fullName, setFullName] = useState(user.fullName)
   const [email, setEmail] = useState(user.email)
@@ -390,6 +401,17 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
                         <div className="flex flex-wrap gap-2">
                           <a href={getDocumentViewUrl(document.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">View</a>
                           <a href={getDocumentDownloadUrl(document.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">Download</a>
+                          <DocumentUploadButton
+                            label={getReadableDocumentLabel(document)}
+                            documentType={document.documentType}
+                            scope={document.scope}
+                            customLabel={document.customLabel}
+                            applicationId={document.applicationId || undefined}
+                            subjectName={user.fullName}
+                            subjectGroup={getDocumentSubjectGroup(document)}
+                            buttonText="Replace"
+                            onUploaded={refreshProfile}
+                          />
                         </div>
                       </td>
                     </tr>

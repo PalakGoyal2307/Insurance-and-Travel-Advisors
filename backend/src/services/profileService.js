@@ -8,6 +8,7 @@ const mapDocument = (document) => ({
   id: document._id,
   scope: document.scope,
   documentType: document.documentType,
+  applicationId: document.applicationId,
   label: DOCUMENT_TYPES[document.documentType]?.label || document.customLabel || document.documentType,
   customLabel: document.customLabel,
   originalFileName: document.originalFileName,

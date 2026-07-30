@@ -4,6 +4,7 @@ export interface ProfileDocumentItem {
   id: string
   scope: 'profile' | 'health' | 'life' | 'general'
   documentType: string
+  applicationId?: string | null
   label: string
   customLabel?: string
   originalFileName: string
