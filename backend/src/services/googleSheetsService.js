@@ -17,40 +17,6 @@ const SENSITIVE_FIELDS = new Set([
   'api_key',
 ])
 const DOCUMENT_FIELD_PATTERN = /(document|documents|file|files|attachment|attachments|upload|uploads|proof|proofs)/i
-const MAX_ADDITIONAL_MEMBERS = 3
-const MEMBER_FIELD_DEFINITIONS = [
-  { key: 'fullName', header: 'Name' },
-  { key: 'email', header: 'Email' },
-  { key: 'phone', header: 'Phone' },
-  { key: 'dob', header: 'DOB' },
-  { key: 'age', header: 'Age' },
-  { key: 'heightFeet', header: 'Height Feet' },
-  { key: 'heightInch', header: 'Height Inch' },
-  { key: 'weightKg', header: 'Weight' },
-  { key: 'address', header: 'Address' },
-  { key: 'pincode', header: 'Pincode' },
-  { key: 'gender', header: 'Gender' },
-  { key: 'relation', header: 'Relation' },
-  { key: 'occupation', header: 'Occupation' },
-  { key: 'annualIncome', header: 'Annual Income' },
-  { key: 'smoking', header: 'Smoking' },
-  { key: 'medicalHistory', header: 'Medical History' },
-  { key: 'aadhaar.mode', header: 'Aadhaar Mode' },
-  { key: 'aadhaar.singleDocumentId', header: 'Aadhaar Single Document ID' },
-  { key: 'aadhaar.frontDocumentId', header: 'Aadhaar Front Document ID' },
-  { key: 'aadhaar.backDocumentId', header: 'Aadhaar Back Document ID' },
-  { key: 'diseases.mode', header: 'Disease Mode' },
-  { key: 'diseases.names', header: 'Diseases' },
-  { key: 'diseases.otherText', header: 'Other Disease' },
-  { key: 'panCardDocumentId', header: 'PAN Card Document ID' },
-  { key: 'bankProofDocumentId', header: 'Bank Proof Document ID' },
-  { key: 'itrDocumentIds', header: 'ITR Document IDs' },
-  { key: 'computationDocumentIds', header: 'Computation Document IDs' },
-  { key: 'nomineeAadhaarDocumentId', header: 'Nominee Aadhaar Document ID' },
-  { key: 'nomineePanDocumentId', header: 'Nominee PAN Document ID' },
-  { key: 'nomineeBankProofDocumentId', header: 'Nominee Bank Proof Document ID' },
-]
-const FIXED_INSURANCE_TOP_LEVEL_HEADERS = ['Name', 'Email', 'Phone', 'Plan Name', 'Source Context']
 const FIELD_LABELS = {
   fullName: 'Name',
   name: 'Name',
@@ -75,8 +41,6 @@ const FIELD_LABELS = {
   annualIncome: 'Annual Income',
   smoking: 'Smoking',
   medicalHistory: 'Medical History',
-  planName: 'Plan Name',
-  sourceContext: 'Source Context',
   message: 'Message',
   subject: 'Subject',
   context: 'Context',
@@ -242,65 +206,24 @@ const addEntry = (values, header, value) => {
   values[header] = normalizeValue(value)
 }
 
-const getNestedValue = (source, path) => {
-  const segments = path.split('.')
-  let current = source
-
-  for (const segment of segments) {
-    if (!current || typeof current !== 'object') {
-      return ''
-    }
-    current = current[segment]
-  }
-
-  if (current === undefined || current === null) {
-    return ''
-  }
-
-  if (Array.isArray(current)) {
-    return current.map((item) => normalizeValue(item)).filter(Boolean).join(', ')
-  }
-
-  if (typeof current === 'object' && !(current instanceof Date)) {
-    return ''
-  }
-
-  return normalizeValue(current)
-}
-
-const getMemberHeadersForLabel = (memberLabel) => MEMBER_FIELD_DEFINITIONS.map((field) => `${memberLabel} ${field.header}`)
-
-const addMemberEntries = (values, memberLabel, member) => {
-  if (!member || typeof member !== 'object') {
+const addDiseaseEntries = (values, memberLabel, member) => {
+  if (!member || typeof member !== 'object' || !member.diseases || typeof member.diseases !== 'object') {
     return
   }
 
-  MEMBER_FIELD_DEFINITIONS.forEach((field) => {
-    addEntry(values, `${memberLabel} ${field.header}`, getNestedValue(member, field.key))
-  })
-}
+  const { diseases } = member
+  const mode = normalizeValue(diseases.mode)
+  const names = Array.isArray(diseases.names)
+    ? diseases.names
+      .map((name) => normalizeValue(name))
+      .filter(Boolean)
+      .join(', ')
+    : ''
+  const otherText = normalizeValue(diseases.otherText)
 
-const isHealthOrLifeForm = (formType) => {
-  const normalizedFormType = String(formType || '').toLowerCase()
-  return normalizedFormType.includes('health') || normalizedFormType.includes('life')
-}
-
-const shouldIncludeFixedMemberHeaders = (formType, payload) => {
-  if (isHealthOrLifeForm(formType)) {
-    return true
-  }
-
-  return Boolean(payload?.primaryMember) || Array.isArray(payload?.additionalMembers)
-}
-
-const getFixedMemberHeaders = () => {
-  const headers = [...getMemberHeadersForLabel('Primary Member')]
-
-  for (let memberIndex = 1; memberIndex <= MAX_ADDITIONAL_MEMBERS; memberIndex += 1) {
-    headers.push(...getMemberHeadersForLabel(`Member ${memberIndex}`))
-  }
-
-  return headers
+  addEntry(values, `${memberLabel} Disease Mode`, mode)
+  addEntry(values, `${memberLabel} Diseases`, names)
+  addEntry(values, `${memberLabel} Other Disease`, otherText)
 }
 
 const collectStructuredValues = (payload) => {
@@ -318,7 +241,25 @@ const collectStructuredValues = (payload) => {
   })
 
   if (payload.primaryMember && typeof payload.primaryMember === 'object') {
-    addMemberEntries(values, 'Primary Member', payload.primaryMember)
+    const primaryMember = payload.primaryMember
+    addEntry(values, makeHeader('Primary Member', 'fullName'), findValue(primaryMember, ['fullName', 'name']))
+    addEntry(values, makeHeader('Primary Member', 'email'), findValue(primaryMember, ['email']))
+    addEntry(values, makeHeader('Primary Member', 'phone'), findValue(primaryMember, ['phone', 'mobile']))
+    addEntry(values, makeHeader('Primary Member', 'dob'), findValue(primaryMember, ['dob', 'dateOfBirth']))
+    addEntry(values, makeHeader('Primary Member', 'heightFeet'), findValue(primaryMember, ['heightFeet']))
+    addEntry(values, makeHeader('Primary Member', 'heightInch'), findValue(primaryMember, ['heightInch']))
+    addEntry(values, makeHeader('Primary Member', 'weightKg'), findValue(primaryMember, ['weightKg', 'weight']))
+    addEntry(values, makeHeader('Primary Member', 'address'), findValue(primaryMember, ['address']))
+    addEntry(values, makeHeader('Primary Member', 'pincode'), findValue(primaryMember, ['pincode']))
+    addEntry(values, makeHeader('Primary Member', 'gender'), findValue(primaryMember, ['gender']))
+    addEntry(values, makeHeader('Primary Member', 'relation'), findValue(primaryMember, ['relation']))
+    addEntry(values, makeHeader('Primary Member', 'pan'), findValue(primaryMember, ['pan', 'panNumber']))
+    addEntry(values, makeHeader('Primary Member', 'aadhaar'), findValue(primaryMember, ['aadhaar', 'aadhaarNumber']))
+    addEntry(values, makeHeader('Primary Member', 'occupation'), findValue(primaryMember, ['occupation']))
+    addEntry(values, makeHeader('Primary Member', 'annualIncome'), findValue(primaryMember, ['annualIncome']))
+    addEntry(values, makeHeader('Primary Member', 'smoking'), findValue(primaryMember, ['smoking']))
+    addEntry(values, makeHeader('Primary Member', 'medicalHistory'), findValue(primaryMember, ['medicalHistory']))
+    addDiseaseEntries(values, 'Primary Member', primaryMember)
   }
 
   if (Array.isArray(payload.additionalMembers)) {
@@ -328,7 +269,24 @@ const collectStructuredValues = (payload) => {
       }
 
       const memberLabel = `Member ${index + 1}`
-      addMemberEntries(values, memberLabel, member)
+      addEntry(values, makeHeader(memberLabel, 'fullName'), findValue(member, ['fullName', 'name']))
+      addEntry(values, makeHeader(memberLabel, 'email'), findValue(member, ['email']))
+      addEntry(values, makeHeader(memberLabel, 'phone'), findValue(member, ['phone', 'mobile']))
+      addEntry(values, makeHeader(memberLabel, 'dob'), findValue(member, ['dob', 'dateOfBirth']))
+      addEntry(values, makeHeader(memberLabel, 'heightFeet'), findValue(member, ['heightFeet']))
+      addEntry(values, makeHeader(memberLabel, 'heightInch'), findValue(member, ['heightInch']))
+      addEntry(values, makeHeader(memberLabel, 'weightKg'), findValue(member, ['weightKg', 'weight']))
+      addEntry(values, makeHeader(memberLabel, 'address'), findValue(member, ['address']))
+      addEntry(values, makeHeader(memberLabel, 'pincode'), findValue(member, ['pincode']))
+      addEntry(values, makeHeader(memberLabel, 'gender'), findValue(member, ['gender']))
+      addEntry(values, makeHeader(memberLabel, 'relation'), findValue(member, ['relation']))
+      addEntry(values, makeHeader(memberLabel, 'pan'), findValue(member, ['pan', 'panNumber']))
+      addEntry(values, makeHeader(memberLabel, 'aadhaar'), findValue(member, ['aadhaar', 'aadhaarNumber']))
+      addEntry(values, makeHeader(memberLabel, 'occupation'), findValue(member, ['occupation']))
+      addEntry(values, makeHeader(memberLabel, 'annualIncome'), findValue(member, ['annualIncome']))
+      addEntry(values, makeHeader(memberLabel, 'smoking'), findValue(member, ['smoking']))
+      addEntry(values, makeHeader(memberLabel, 'medicalHistory'), findValue(member, ['medicalHistory']))
+      addDiseaseEntries(values, memberLabel, member)
     })
   }
 
@@ -401,9 +359,7 @@ export const appendFormSubmission = async ({ formType, payload }) => {
   const sheetName = sanitizeSheetName(getSheetName(formType))
   await ensureSheetExists(sheets, spreadsheetId, sheetName)
 
-  const fixedTopLevelHeaders = isHealthOrLifeForm(formType) ? FIXED_INSURANCE_TOP_LEVEL_HEADERS : []
-  const fixedMemberHeaders = shouldIncludeFixedMemberHeaders(formType, payload) ? getFixedMemberHeaders() : []
-  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, [...Object.keys(values), ...fixedTopLevelHeaders, ...fixedMemberHeaders])
+  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
   const row = headers.map((header) => values[header] ?? '')
 
   await sheets.spreadsheets.values.append({
