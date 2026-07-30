@@ -289,20 +289,20 @@ const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => 
     })
 
     const existingHeaders = existingValues.data.values?.[0] || []
-    const mergedHeaders = Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
-
-    if (existingHeaders.length !== mergedHeaders.length || existingHeaders.some((header, index) => header !== mergedHeaders[index])) {
+    if (existingHeaders.length === 0) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${sheetName}!1:${columnLetter(mergedHeaders.length)}1`,
+        range: `${sheetName}!1:${columnLetter(normalizedHeaders.length)}1`,
         valueInputOption: 'RAW',
         requestBody: {
-          values: [mergedHeaders],
+          values: [normalizedHeaders],
         },
       })
+
+      return normalizedHeaders
     }
 
-    return mergedHeaders
+    return existingHeaders
   } catch (error) {
     console.error('Failed to initialize Google Sheets headers:', error)
     return normalizedHeaders
@@ -329,10 +329,10 @@ export const appendFormSubmission = async ({ formType, payload }) => {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${sheetName}!A1`,
+    range: `${sheetName}!A2`,
     valueInputOption: 'RAW',
     requestBody: {
-      values: [headers, row],
+      values: [row],
     },
   })
 
