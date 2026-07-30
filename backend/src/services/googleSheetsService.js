@@ -332,7 +332,7 @@ export const appendFormSubmission = async ({ formType, payload }) => {
     range: `${sheetName}!A1`,
     valueInputOption: 'RAW',
     requestBody: {
-      values: [row],
+      values: [headers, row],
     },
   })
 
