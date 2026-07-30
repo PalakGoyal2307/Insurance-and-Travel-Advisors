@@ -2,6 +2,9 @@ import { google } from 'googleapis'
 import { env } from '../config/env.js'
 
 const DEFAULT_SPREADSHEET_TITLE = env.googleSheetsSheetName || 'Form Submissions'
+const MAX_ADDITIONAL_MEMBERS = 3
+const INSURANCE_SHEET_NAMES = ['Health Insurance', 'Life Insurance']
+const INSURANCE_TOP_LEVEL_HEADERS = ['Name', 'Email', 'Phone', 'Plan Name', 'Source Context']
 const SENSITIVE_FIELDS = new Set([
   'password',
   'confirmPassword',
@@ -23,6 +26,7 @@ const FIELD_LABELS = {
   email: 'Email',
   phone: 'Phone',
   mobile: 'Phone',
+  age: 'Age',
   dob: 'DOB',
   dateOfBirth: 'DOB',
   heightFeet: 'Height Feet',
@@ -41,11 +45,49 @@ const FIELD_LABELS = {
   annualIncome: 'Annual Income',
   smoking: 'Smoking',
   medicalHistory: 'Medical History',
+  planName: 'Plan Name',
+  sourceContext: 'Source Context',
   message: 'Message',
   subject: 'Subject',
   context: 'Context',
   source: 'Source',
   company: 'Company',
+}
+
+const INSURANCE_MEMBER_FIELD_HEADERS = [
+  'Name',
+  'DOB',
+  'Age',
+  'Height Feet',
+  'Height Inch',
+  'Weight',
+  'Address',
+  'Pincode',
+  'Gender',
+  'Relation',
+  'Occupation',
+  'Annual Income',
+  'Smoking',
+  'Medical History',
+  'Disease Mode',
+  'Diseases',
+  'Other Disease',
+]
+
+const getInsuranceFixedHeaders = () => {
+  const headers = [...INSURANCE_TOP_LEVEL_HEADERS]
+  headers.push(...INSURANCE_MEMBER_FIELD_HEADERS.map((field) => `Primary Member ${field}`))
+
+  for (let index = 1; index <= MAX_ADDITIONAL_MEMBERS; index += 1) {
+    headers.push(...INSURANCE_MEMBER_FIELD_HEADERS.map((field) => `Member ${index} ${field}`))
+  }
+
+  return headers
+}
+
+const isInsuranceFormPayload = (formType, payload) => {
+  const normalized = String(formType || '').toLowerCase()
+  return normalized.includes('health') || normalized.includes('life') || Boolean(payload?.primaryMember) || Array.isArray(payload?.additionalMembers)
 }
 
 let cachedSheetsClient = null
@@ -246,6 +288,7 @@ const collectStructuredValues = (payload) => {
     addEntry(values, makeHeader('Primary Member', 'email'), findValue(primaryMember, ['email']))
     addEntry(values, makeHeader('Primary Member', 'phone'), findValue(primaryMember, ['phone', 'mobile']))
     addEntry(values, makeHeader('Primary Member', 'dob'), findValue(primaryMember, ['dob', 'dateOfBirth']))
+    addEntry(values, makeHeader('Primary Member', 'age'), findValue(primaryMember, ['age']))
     addEntry(values, makeHeader('Primary Member', 'heightFeet'), findValue(primaryMember, ['heightFeet']))
     addEntry(values, makeHeader('Primary Member', 'heightInch'), findValue(primaryMember, ['heightInch']))
     addEntry(values, makeHeader('Primary Member', 'weightKg'), findValue(primaryMember, ['weightKg', 'weight']))
@@ -273,6 +316,7 @@ const collectStructuredValues = (payload) => {
       addEntry(values, makeHeader(memberLabel, 'email'), findValue(member, ['email']))
       addEntry(values, makeHeader(memberLabel, 'phone'), findValue(member, ['phone', 'mobile']))
       addEntry(values, makeHeader(memberLabel, 'dob'), findValue(member, ['dob', 'dateOfBirth']))
+      addEntry(values, makeHeader(memberLabel, 'age'), findValue(member, ['age']))
       addEntry(values, makeHeader(memberLabel, 'heightFeet'), findValue(member, ['heightFeet']))
       addEntry(values, makeHeader(memberLabel, 'heightInch'), findValue(member, ['heightInch']))
       addEntry(values, makeHeader(memberLabel, 'weightKg'), findValue(member, ['weightKg', 'weight']))
@@ -359,7 +403,8 @@ export const appendFormSubmission = async ({ formType, payload }) => {
   const sheetName = sanitizeSheetName(getSheetName(formType))
   await ensureSheetExists(sheets, spreadsheetId, sheetName)
 
-  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
+  const fixedHeaders = isInsuranceFormPayload(formType, payload) ? getInsuranceFixedHeaders() : []
+  const headers = await ensureSheetHeaders(sheets, spreadsheetId, sheetName, [...fixedHeaders, ...Object.keys(values)])
   const row = headers.map((header) => values[header] ?? '')
 
   await sheets.spreadsheets.values.append({
@@ -374,5 +419,25 @@ export const appendFormSubmission = async ({ formType, payload }) => {
   return {
     spreadsheetId,
     sheetName,
+  }
+}
+
+export const initializeInsuranceSheetHeaders = async () => {
+  if (!env.googleDriveClientEmail || !env.googleDrivePrivateKey) {
+    return null
+  }
+
+  const sheets = getSheetsClient()
+  const spreadsheetId = await getSpreadsheetId()
+  const fixedHeaders = getInsuranceFixedHeaders()
+
+  for (const sheetName of INSURANCE_SHEET_NAMES) {
+    await ensureSheetExists(sheets, spreadsheetId, sheetName)
+    await ensureSheetHeaders(sheets, spreadsheetId, sheetName, fixedHeaders)
+  }
+
+  return {
+    spreadsheetId,
+    sheetNames: INSURANCE_SHEET_NAMES,
   }
 }
