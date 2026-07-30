@@ -138,6 +138,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     buffer: req.file.buffer,
     subjectName: normalizedSubjectName,
     subjectGroup: normalizedSubjectGroup,
+    folderId: existingDocument?.googleDriveFolderId || null,
   })
 
   const document = await Document.create({

@@ -107,9 +107,11 @@ export const resolveDocumentFolder = async ({ customerCode, fullName, phone, sub
   return ensureFolder(subjectFolderName, folders.userFolder.id)
 }
 
-export const uploadFileToDrive = async ({ customerCode, fullName, phone, storedFileName, mimeType, buffer, subjectGroup, subjectName }) => {
+export const uploadFileToDrive = async ({ customerCode, fullName, phone, storedFileName, mimeType, buffer, subjectGroup, subjectName, folderId = null }) => {
   const drive = getDriveClient()
-  const folder = await resolveDocumentFolder({ customerCode, fullName, phone, subjectGroup, subjectName })
+  const folder = folderId
+    ? { id: folderId }
+    : await resolveDocumentFolder({ customerCode, fullName, phone, subjectGroup, subjectName })
   const stream = Readable.from(buffer)
   const response = await drive.files.create({
     requestBody: {
