@@ -297,23 +297,25 @@ const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => 
     })
 
     const existingHeadersRaw = existingValues.data.values?.[0] || []
-    const existingHeaders = Array.from(new Set(existingHeadersRaw.filter(Boolean)))
+    const existingHeaders = Array.from(new Set(existingHeadersRaw.filter(Boolean).map((header) => String(header).trim()).filter(Boolean)))
     const mergedHeaders = Array.from(new Set([...existingHeaders, ...normalizedHeaders]))
 
-    if (existingHeaders.length === 0 || mergedHeaders.length !== existingHeadersRaw.length || mergedHeaders.some((header, index) => header !== existingHeadersRaw[index])) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `${sheetName}!1:${columnLetter(mergedHeaders.length)}1`,
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [mergedHeaders],
-        },
-      })
+    // Always rewrite headers from A1 so shifted/blank leading columns are corrected.
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId,
+      range: `${sheetName}!1:1`,
+    })
 
-      return mergedHeaders
-    }
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetName}!A1:${columnLetter(mergedHeaders.length)}1`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [mergedHeaders],
+      },
+    })
 
-    return existingHeaders
+    return mergedHeaders
   } catch (error) {
     console.error('Failed to initialize Google Sheets headers:', error)
     return normalizedHeaders
