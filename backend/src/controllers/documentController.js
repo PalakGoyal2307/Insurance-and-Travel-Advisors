@@ -5,7 +5,6 @@ import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { uploadFileToDrive, trashDriveFile, getDriveFileMetadata, getDriveFileStream } from '../services/googleDriveService.js'
 import { DOCUMENT_TYPES } from '../constants/documentConstants.js'
-import { extractAadhaarInfoFromFile } from '../services/aadhaarOcrService.js'
 
 const sanitizeFilePart = (value) => String(value || '')
   .trim()
@@ -113,18 +112,6 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     })
   }
 
-  let aadhaarOcr = null
-  if (documentType === 'aadhaarCard') {
-    try {
-      aadhaarOcr = await extractAadhaarInfoFromFile({
-        buffer: req.file.buffer,
-        mimeType: req.file.mimetype,
-      })
-    } catch (error) {
-      console.error('Aadhaar OCR extraction failed:', error)
-    }
-  }
-
   const storedFileName = buildStoredFileName({
     customerCode: req.user.customerCode,
     documentType,
@@ -186,7 +173,6 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     data: {
       document: mapDocument(document),
       replacedExisting: Boolean(existingDocument),
-      aadhaarOcr,
     },
   })
 })

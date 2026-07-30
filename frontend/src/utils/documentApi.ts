@@ -30,11 +30,6 @@ interface UploadDocumentResponse {
   data: {
     document: ProfileDocumentItem
     replacedExisting: boolean
-    aadhaarOcr?: {
-      name?: string | null
-      dob?: string | null
-      pincode?: string | null
-    } | null
   }
 }
 

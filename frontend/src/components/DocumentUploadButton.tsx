@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { uploadDocument } from '../utils/documentApi'
 import { ApiRequestError } from '../utils/api'
-import type { AadhaarOcrPayload } from '../utils/aadhaarOcr'
 
 interface Props {
   label: string
@@ -12,7 +11,7 @@ interface Props {
   subjectName?: string
   subjectGroup?: string
   buttonText: string
-  onUploaded: (uploadedDocumentId?: string, uploadedFile?: File, aadhaarOcr?: AadhaarOcrPayload | null) => Promise<void> | void
+  onUploaded: (uploadedDocumentId?: string, uploadedFile?: File) => Promise<void> | void
 }
 
 export default function DocumentUploadButton({
@@ -47,7 +46,7 @@ export default function DocumentUploadButton({
         subjectName,
         subjectGroup,
       })
-      await onUploaded(response.data.document.id, file, response.data.aadhaarOcr || null)
+      await onUploaded(response.data.document.id, file)
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message)
