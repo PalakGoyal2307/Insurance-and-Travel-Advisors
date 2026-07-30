@@ -185,6 +185,42 @@ const lifeApplicationSchema = new mongoose.Schema(
       trim: true,
       default: 'insurance:popup:life',
     },
+    proposerType: {
+      type: String,
+      enum: ['self', 'others'],
+      default: 'self',
+      index: true,
+    },
+    proposerSequence: {
+      type: Number,
+      default: null,
+      min: 1,
+      max: 99,
+      validate: {
+        validator(value) {
+          if (this.proposerType === 'others') {
+            return Number.isInteger(value) && value >= 1 && value <= 99
+          }
+          return value === null || value === undefined
+        },
+        message: 'Proposer sequence must be provided only for proposer type others',
+      },
+    },
+    proposerName: {
+      type: String,
+      trim: true,
+      default: '',
+      maxlength: 120,
+      validate: {
+        validator(value) {
+          if (this.proposerType === 'others') {
+            return String(value || '').trim().length >= 2
+          }
+          return String(value || '').trim().length === 0
+        },
+        message: 'Proposer name is required only when proposer type is others',
+      },
+    },
     primaryMember: {
       type: memberSchema,
       required: true,

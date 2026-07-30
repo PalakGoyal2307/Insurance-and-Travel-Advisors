@@ -5,6 +5,9 @@ export interface InsuranceApplicationItem {
   module: 'health' | 'life' | 'general'
   status: 'pending' | 'approved' | 'rejected' | 'completed'
   planName?: string
+  proposerType?: 'self' | 'others'
+  proposerSequence?: number | null
+  proposerName?: string
   createdAt: string
   updatedAt: string
   fullName: string
@@ -65,6 +68,8 @@ export interface CreateHealthApplicationPayload {
   fullName: string
   email: string
   phone: string
+  proposerType?: 'self' | 'others'
+  proposerSequence?: number
   primaryMember: InsuranceMemberPayload
   additionalMembers?: InsuranceMemberPayload[]
   planName?: string
@@ -75,6 +80,8 @@ export interface CreateLifeApplicationPayload {
   fullName: string
   email: string
   phone: string
+  proposerType?: 'self' | 'others'
+  proposerSequence?: number
   primaryMember: InsuranceMemberPayload
   additionalMembers?: InsuranceMemberPayload[]
   planName?: string

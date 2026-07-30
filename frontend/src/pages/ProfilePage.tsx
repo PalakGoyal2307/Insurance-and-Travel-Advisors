@@ -14,6 +14,14 @@ interface Props {
   onProfileUpdated: (user: AuthUser) => void
 }
 
+interface DocumentCardConfig {
+  key: string
+  label: string
+  documentType: string
+  scope: 'profile' | 'health' | 'life' | 'general'
+  customLabel?: string
+}
+
 const formatMemberTag = (customLabel: string) => {
   const match = customLabel.match(/member(\d+)/i)
   if (!match) return ''
@@ -30,21 +38,31 @@ const formatAadhaarSide = (customLabel: string) => {
   return ''
 }
 
-const getReadableDocumentLabel = (document: { label: string; documentType: string; customLabel?: string }) => {
+const getReadableDocumentLabel = (document: {
+  label: string
+  documentType: string
+  customLabel?: string
+  documentOwnerType?: 'user' | 'proposer'
+  proposerSequence?: number | null
+}) => {
+  const proposerPrefix = document.documentOwnerType === 'proposer' && document.proposerSequence
+    ? `Proposer ${document.proposerSequence} - `
+    : ''
+
   if (document.documentType !== 'aadhaarCard') {
-    if (document.customLabel?.includes('nominee-bank-proof')) return 'Nominee Cancelled Cheque/Passbook'
-    if (document.customLabel?.includes('nominee-pan')) return 'Nominee PAN Card'
-    if (document.customLabel?.includes('bank-proof')) return 'Cancelled Cheque/Passbook'
-    return document.label
+    if (document.customLabel?.includes('nominee-bank-proof')) return `${proposerPrefix}Nominee Cancelled Cheque/Passbook`
+    if (document.customLabel?.includes('nominee-pan')) return `${proposerPrefix}Nominee PAN Card`
+    if (document.customLabel?.includes('bank-proof')) return `${proposerPrefix}Cancelled Cheque/Passbook`
+    return `${proposerPrefix}${document.label}`
   }
 
   const side = formatAadhaarSide(document.customLabel || '')
   const member = formatMemberTag(document.customLabel || '')
 
-  if (member && side) return `${member} Aadhaar Card (${side})`
-  if (member) return `${member} Aadhaar Card`
-  if (side) return `Aadhaar Card (${side})`
-  return 'Aadhaar Card'
+  if (member && side) return `${proposerPrefix}${member} Aadhaar Card (${side})`
+  if (member) return `${proposerPrefix}${member} Aadhaar Card`
+  if (side) return `${proposerPrefix}Aadhaar Card (${side})`
+  return `${proposerPrefix}Aadhaar Card`
 }
 
 const getDocumentSubjectGroup = (document: { customLabel?: string; scope: 'profile' | 'health' | 'life' | 'general' }) => {
@@ -58,7 +76,7 @@ const getDocumentSubjectGroup = (document: { customLabel?: string; scope: 'profi
   return 'Primary Member'
 }
 
-export default function ProfilePage({ navigate, user, onProfileUpdated }: Props) {
+export default function ProfilePage({ user, onProfileUpdated }: Props) {
   const [fullName, setFullName] = useState(user.fullName)
   const [email, setEmail] = useState(user.email)
   const [phone, setPhone] = useState(user.phone)
@@ -120,7 +138,7 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
   const applications = user.applications || { health: [], life: [], general: [] }
   const uploadedDocuments = user.uploadedDocuments || []
 
-  const documentCards = useMemo(
+  const documentCards = useMemo<DocumentCardConfig[]>(
     () => [
       {
         key: 'aadhaar-single',
@@ -202,16 +220,6 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
     []
   )
 
-  const profileDocMap = useMemo(() => {
-    const map = new Map<string, (typeof uploadedDocuments)[number]>()
-    for (const document of uploadedDocuments) {
-      if (document.scope === 'profile') {
-        map.set(document.documentType, document)
-      }
-    }
-    return map
-  }, [uploadedDocuments])
-
   const latestDocumentByType = useMemo(() => {
     const map = new Map<string, (typeof uploadedDocuments)[number]>()
     for (const document of uploadedDocuments) {
@@ -232,6 +240,28 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
       }
     }
     return map
+  }, [uploadedDocuments])
+
+  const userOwnedDocuments = useMemo(
+    () => uploadedDocuments.filter((document) => (document.documentOwnerType || 'user') !== 'proposer'),
+    [uploadedDocuments]
+  )
+
+  const proposerDocumentGroups = useMemo(() => {
+    const groups = new Map<number, typeof uploadedDocuments>()
+    for (const document of uploadedDocuments) {
+      if (document.documentOwnerType !== 'proposer') continue
+      const sequence = Number(document.proposerSequence) || 0
+      if (sequence < 1) continue
+      if (!groups.has(sequence)) {
+        groups.set(sequence, [])
+      }
+      groups.get(sequence)?.push(document)
+    }
+
+    return Array.from(groups.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([sequence, documents]) => ({ sequence, documents }))
   }, [uploadedDocuments])
 
   return (
@@ -386,12 +416,12 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
                 </tr>
               </thead>
               <tbody>
-                {uploadedDocuments.length === 0 ? (
+                {userOwnedDocuments.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No files uploaded yet.</td>
+                    <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No user files uploaded yet.</td>
                   </tr>
                 ) : (
-                  uploadedDocuments.map((document) => (
+                  userOwnedDocuments.map((document) => (
                     <tr key={document.id} className="border-t border-blue-100">
                       <td className="px-4 py-3 font-semibold text-[#0D2B5E]">{getReadableDocumentLabel(document)}</td>
                       <td className="px-4 py-3 capitalize text-gray-600">{document.scope}</td>
@@ -409,6 +439,8 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
                             applicationId={document.applicationId || undefined}
                             subjectName={user.fullName}
                             subjectGroup={getDocumentSubjectGroup(document)}
+                            documentOwnerType={document.documentOwnerType || 'user'}
+                            proposerSequence={document.proposerSequence || undefined}
                             buttonText="Replace"
                             onUploaded={refreshProfile}
                           />
@@ -420,6 +452,52 @@ export default function ProfilePage({ navigate, user, onProfileUpdated }: Props)
               </tbody>
             </table>
           </div>
+
+          {proposerDocumentGroups.map((group) => (
+            <div key={`proposer-table-${group.sequence}`} className="mt-6 overflow-auto rounded-2xl border border-blue-100">
+              <div className="bg-blue-50 px-4 py-3 text-sm font-bold text-[#0D2B5E]">Proposer {group.sequence} Documents</div>
+              <table className="w-full text-sm">
+                <thead className="bg-blue-50/60 text-[#0D2B5E]">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-bold">Document</th>
+                    <th className="text-left px-4 py-3 font-bold">Scope</th>
+                    <th className="text-left px-4 py-3 font-bold">File</th>
+                    <th className="text-left px-4 py-3 font-bold">Uploaded</th>
+                    <th className="text-left px-4 py-3 font-bold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.documents.map((document) => (
+                    <tr key={document.id} className="border-t border-blue-100">
+                      <td className="px-4 py-3 font-semibold text-[#0D2B5E]">{getReadableDocumentLabel(document)}</td>
+                      <td className="px-4 py-3 capitalize text-gray-600">{document.scope}</td>
+                      <td className="px-4 py-3 text-gray-600">{document.originalFileName}</td>
+                      <td className="px-4 py-3 text-gray-600">{new Date(document.uploadedAt).toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <a href={getDocumentViewUrl(document.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">View</a>
+                          <a href={getDocumentDownloadUrl(document.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">Download</a>
+                          <DocumentUploadButton
+                            label={getReadableDocumentLabel(document)}
+                            documentType={document.documentType}
+                            scope={document.scope}
+                            customLabel={document.customLabel}
+                            applicationId={document.applicationId || undefined}
+                            subjectName={user.fullName}
+                            subjectGroup={getDocumentSubjectGroup(document)}
+                            documentOwnerType="proposer"
+                            proposerSequence={group.sequence}
+                            buttonText="Replace"
+                            onUploaded={refreshProfile}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
         </div>
 
         <div className="bg-white border border-blue-100 rounded-3xl shadow-xl p-6 sm:p-8">

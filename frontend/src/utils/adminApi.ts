@@ -38,6 +38,7 @@ export interface AdminUserItem {
   _id: string
   customerCode: string
   fullName: string
+  proposerName?: string
   email: string
   phone: string
   role: 'user' | 'admin'

@@ -10,6 +10,8 @@ interface Props {
   customLabel?: string
   subjectName?: string
   subjectGroup?: string
+  documentOwnerType?: 'user' | 'proposer'
+  proposerSequence?: number
   buttonText: string
   onUploaded: (uploadedDocumentId?: string, uploadedFile?: File) => Promise<void> | void
 }
@@ -22,6 +24,8 @@ export default function DocumentUploadButton({
   customLabel,
   subjectName,
   subjectGroup,
+  documentOwnerType,
+  proposerSequence,
   buttonText,
   onUploaded,
 }: Props) {
@@ -45,6 +49,8 @@ export default function DocumentUploadButton({
         applicationId,
         subjectName,
         subjectGroup,
+        documentOwnerType,
+        proposerSequence,
       })
       await onUploaded(response.data.document.id, file)
     } catch (err) {

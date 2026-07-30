@@ -5,6 +5,8 @@ export interface ProfileDocumentItem {
   scope: 'profile' | 'health' | 'life' | 'general'
   documentType: string
   applicationId?: string | null
+  documentOwnerType?: 'user' | 'proposer'
+  proposerSequence?: number | null
   label: string
   customLabel?: string
   originalFileName: string
@@ -41,6 +43,8 @@ export interface UploadDocumentPayload {
   applicationId?: string
   subjectName?: string
   subjectGroup?: string
+  documentOwnerType?: 'user' | 'proposer'
+  proposerSequence?: number
 }
 
 export const listMyDocuments = async () => {
@@ -60,6 +64,8 @@ export const uploadDocument = async (payload: UploadDocumentPayload) => {
   if (payload.applicationId) formData.append('applicationId', payload.applicationId)
   if (payload.subjectName) formData.append('subjectName', payload.subjectName)
   if (payload.subjectGroup) formData.append('subjectGroup', payload.subjectGroup)
+  if (payload.documentOwnerType) formData.append('documentOwnerType', payload.documentOwnerType)
+  if (payload.proposerSequence) formData.append('proposerSequence', String(payload.proposerSequence))
 
   const response = await fetch(`${API_BASE_URL}/documents`, {
     method: 'POST',

@@ -29,6 +29,28 @@ const documentSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    documentOwnerType: {
+      type: String,
+      enum: ['user', 'proposer'],
+      default: 'user',
+      index: true,
+    },
+    proposerSequence: {
+      type: Number,
+      default: null,
+      min: 1,
+      max: 99,
+      index: true,
+      validate: {
+        validator(value) {
+          if (this.documentOwnerType === 'proposer') {
+            return Number.isInteger(value) && value >= 1 && value <= 99
+          }
+          return value === null || value === undefined
+        },
+        message: 'Proposer sequence is required only for proposer-owned documents',
+      },
+    },
     originalFileName: {
       type: String,
       required: true,
@@ -80,7 +102,16 @@ const documentSchema = new mongoose.Schema(
 )
 
 documentSchema.index(
-  { userId: 1, scope: 1, documentType: 1, applicationId: 1, customLabel: 1, isActive: 1 },
+  {
+    userId: 1,
+    scope: 1,
+    documentType: 1,
+    applicationId: 1,
+    customLabel: 1,
+    documentOwnerType: 1,
+    proposerSequence: 1,
+    isActive: 1,
+  },
   { name: 'document_lookup_index' }
 )
 

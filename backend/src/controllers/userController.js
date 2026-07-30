@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 import { User } from '../models/User.js'
+import { HealthApplication } from '../models/HealthApplication.js'
+import { LifeApplication } from '../models/LifeApplication.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { buildProfileBundle } from '../services/profileService.js'
@@ -30,10 +32,45 @@ export const listUsersForAdmin = asyncHandler(async (req, res) => {
     User.countDocuments(query),
   ])
 
+  const userIds = items.map((item) => item._id)
+  const [healthProposers, lifeProposers] = await Promise.all([
+    HealthApplication.find({
+      userId: { $in: userIds },
+      proposerType: 'others',
+      proposerName: { $exists: true, $ne: '' },
+    })
+      .select('userId proposerName createdAt')
+      .sort({ createdAt: -1 })
+      .lean(),
+    LifeApplication.find({
+      userId: { $in: userIds },
+      proposerType: 'others',
+      proposerName: { $exists: true, $ne: '' },
+    })
+      .select('userId proposerName createdAt')
+      .sort({ createdAt: -1 })
+      .lean(),
+  ])
+
+  const proposerNameByUserId = new Map()
+  ;[...healthProposers, ...lifeProposers]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .forEach((item) => {
+      const key = item.userId.toString()
+      if (!proposerNameByUserId.has(key)) {
+        proposerNameByUserId.set(key, item.proposerName)
+      }
+    })
+
+  const enrichedItems = items.map((item) => ({
+    ...item,
+    proposerName: proposerNameByUserId.get(item._id.toString()) || '',
+  }))
+
   res.status(200).json({
     success: true,
     data: {
-      items,
+      items: enrichedItems,
       pagination: {
         page,
         limit,

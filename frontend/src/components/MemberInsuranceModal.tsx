@@ -38,6 +38,8 @@ interface SubmitPayload {
   fullName: string
   email: string
   phone: string
+  proposerType: 'self' | 'others'
+  proposerSequence?: number
   primaryMember: InsuranceMemberPayload
   additionalMembers: InsuranceMemberPayload[]
 }
@@ -51,6 +53,7 @@ interface Props {
     email: string
     phone: string
   } | null
+  nextProposerSequence?: number
   isSubmitting: boolean
   errorMessage: string
   successMessage: string
@@ -226,30 +229,43 @@ export default function MemberInsuranceModal({
   planLabel,
   existingDocuments = [],
   prefillUser = null,
+  nextProposerSequence = 1,
   isSubmitting,
   errorMessage,
   successMessage,
   onClose,
   onSubmit,
 }: Props) {
+  const [proposerType, setProposerType] = useState<'self' | 'others'>('self')
+  const [proposerSequence] = useState(Math.max(1, Number(nextProposerSequence) || 1))
   const [contactEmail, setContactEmail] = useState(prefillUser?.email || '')
   const [contactPhone, setContactPhone] = useState(prefillUser?.phone || '')
-  const [members, setMembers] = useState<MemberState[]>(() => [createPrimaryMemberFromExistingDocuments(kind, existingDocuments, prefillUser?.fullName || '')])
+  const selfDocuments = useMemo(
+    () => existingDocuments.filter((document) => (document.documentOwnerType || 'user') !== 'proposer'),
+    [existingDocuments]
+  )
+  const proposerDocuments = useMemo(
+    () => existingDocuments.filter((document) => document.documentOwnerType === 'proposer' && document.proposerSequence === proposerSequence),
+    [existingDocuments, proposerSequence]
+  )
+  const [members, setMembers] = useState<MemberState[]>(() => [createPrimaryMemberFromExistingDocuments(kind, selfDocuments, prefillUser?.fullName || '')])
   const [localError, setLocalError] = useState('')
 
-  useEffect(() => {
-    if (!prefillUser) return
+  const activeDocumentOwnerType: 'user' | 'proposer' = proposerType === 'others' ? 'proposer' : 'user'
+  const activeProposerSequence = proposerType === 'others' ? proposerSequence : undefined
 
-    setContactEmail((current) => current || prefillUser.email || '')
-    setContactPhone((current) => current || prefillUser.phone || '')
-    setMembers((current) => current.map((member, index) => {
-      if (index !== 0 || member.fullName.trim()) return member
-      return {
-        ...member,
-        fullName: prefillUser.fullName || '',
+  useEffect(() => {
+    if (proposerType === 'self') {
+      setMembers([createPrimaryMemberFromExistingDocuments(kind, selfDocuments, prefillUser?.fullName || '')])
+      if (prefillUser) {
+        setContactEmail((current) => current || prefillUser.email || '')
+        setContactPhone((current) => current || prefillUser.phone || '')
       }
-    }))
-  }, [prefillUser])
+      return
+    }
+
+    setMembers([createPrimaryMemberFromExistingDocuments(kind, proposerDocuments, '')])
+  }, [kind, prefillUser, proposerDocuments, proposerType, selfDocuments])
 
   const canAddMember = members.length < MAX_MEMBERS
 
@@ -437,6 +453,8 @@ export default function MemberInsuranceModal({
       fullName: members[0].fullName.trim(),
       email: contactEmail.trim(),
       phone: contactPhone.trim(),
+      proposerType,
+      proposerSequence: proposerType === 'others' ? proposerSequence : undefined,
       primaryMember,
       additionalMembers,
     })
@@ -481,6 +499,41 @@ export default function MemberInsuranceModal({
             <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{successMessage}</div>
           )}
 
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 space-y-3">
+            <div className="text-sm font-bold text-[#0D2B5E]">Who is the proposer?</div>
+            <div className="flex flex-wrap gap-6 text-sm">
+              <label className="inline-flex items-center gap-2 text-[#0D2B5E]">
+                <input
+                  type="radio"
+                  name="proposerType"
+                  checked={proposerType === 'self'}
+                  onChange={() => {
+                    setProposerType('self')
+                    setLocalError('')
+                  }}
+                />
+                Self (logged-in user)
+              </label>
+              <label className="inline-flex items-center gap-2 text-[#0D2B5E]">
+                <input
+                  type="radio"
+                  name="proposerType"
+                  checked={proposerType === 'others'}
+                  onChange={() => {
+                    setProposerType('others')
+                    setLocalError('')
+                  }}
+                />
+                Others (new proposer)
+              </label>
+            </div>
+            {proposerType === 'others' && (
+              <div className="text-xs text-gray-600">
+                This submission will be stored under proposer folder: <span className="font-bold">Proposer {proposerSequence}</span>
+              </div>
+            )}
+          </div>
+
           <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="required-label text-[#0D2B5E] text-sm font-bold block mb-1.5">Contact Email</label>
@@ -508,7 +561,11 @@ export default function MemberInsuranceModal({
           {members.map((member, index) => {
             const memberNumber = index + 1
             const isPrimary = index === 0
-            const memberHeading = isPrimary ? `Member 1 (Primary Member)` : `Member ${memberNumber}`
+            const memberHeading = isPrimary
+              ? proposerType === 'others'
+                ? 'Member 1 (Primary Member - Proposer)'
+                : 'Member 1 (Primary Member)'
+              : `Member ${memberNumber}`
             const baseLabel = `member${memberNumber}`
 
             return (
@@ -646,6 +703,8 @@ export default function MemberInsuranceModal({
                         scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-single`)}
                         subjectName={member.fullName.trim() || `Member ${memberNumber}`}
                         subjectGroup={getSubjectGroup(index)}
+                        documentOwnerType={activeDocumentOwnerType}
+                        proposerSequence={activeProposerSequence}
                         buttonText={member.aadhaarSingleId ? 'Replace Aadhaar Single' : 'Upload Aadhaar Single'}
                         onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarSingleId: id || current.aadhaarSingleId }))}
                       />
@@ -661,6 +720,8 @@ export default function MemberInsuranceModal({
                           scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-front`)}
                           subjectName={member.fullName.trim() || `Member ${memberNumber}`}
                           subjectGroup={getSubjectGroup(index)}
+                          documentOwnerType={activeDocumentOwnerType}
+                          proposerSequence={activeProposerSequence}
                           buttonText={member.aadhaarFrontId ? 'Replace Aadhaar Front' : 'Upload Aadhaar Front'}
                           onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarFrontId: id || current.aadhaarFrontId }))}
                         />
@@ -674,6 +735,8 @@ export default function MemberInsuranceModal({
                           scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-aadhaar-back`)}
                           subjectName={member.fullName.trim() || `Member ${memberNumber}`}
                           subjectGroup={getSubjectGroup(index)}
+                          documentOwnerType={activeDocumentOwnerType}
+                          proposerSequence={activeProposerSequence}
                           buttonText={member.aadhaarBackId ? 'Replace Aadhaar Back' : 'Upload Aadhaar Back'}
                           onUploaded={(id) => updateMember(index, (current) => ({ ...current, aadhaarBackId: id || current.aadhaarBackId }))}
                         />
@@ -763,6 +826,8 @@ export default function MemberInsuranceModal({
                           scope={getUploadScopeForDocument('panCard', kind, `${baseLabel}-pan`)}
                           subjectName={member.fullName.trim() || 'Primary Member'}
                           subjectGroup={getSubjectGroup(index)}
+                          documentOwnerType={activeDocumentOwnerType}
+                          proposerSequence={activeProposerSequence}
                           buttonText={member.panCardDocumentId ? 'Replace PAN Card' : 'Upload PAN Card'}
                           onUploaded={(id) => updateMember(index, (current) => ({ ...current, panCardDocumentId: id || current.panCardDocumentId }))}
                         />
@@ -776,6 +841,8 @@ export default function MemberInsuranceModal({
                           scope={getUploadScopeForDocument('cancelledChequePassbook', kind, `${baseLabel}-bank-proof`)}
                           subjectName={member.fullName.trim() || 'Primary Member'}
                           subjectGroup={getSubjectGroup(index)}
+                          documentOwnerType={activeDocumentOwnerType}
+                          proposerSequence={activeProposerSequence}
                           buttonText={member.bankProofDocumentId ? 'Replace Cancelled Cheque/Passbook' : 'Upload Cancelled Cheque/Passbook'}
                           onUploaded={(id) => updateMember(index, (current) => ({ ...current, bankProofDocumentId: id || current.bankProofDocumentId }))}
                         />
@@ -796,6 +863,8 @@ export default function MemberInsuranceModal({
                                 scope={getUploadScopeForDocument('itrDocument', kind, `${baseLabel}-itr-year-${yearIndex + 1}`)}
                                 subjectName={member.fullName.trim() || 'Primary Member'}
                                 subjectGroup={getSubjectGroup(index)}
+                                documentOwnerType={activeDocumentOwnerType}
+                                proposerSequence={activeProposerSequence}
                                 buttonText={member.itrDocumentIds[yearIndex] ? `Replace ITR ${yearIndex + 1}` : `Upload ITR ${yearIndex + 1}`}
                                 onUploaded={(id) =>
                                   updateMember(index, (current) => {
@@ -821,6 +890,8 @@ export default function MemberInsuranceModal({
                                 scope={getUploadScopeForDocument('computationDocument', kind, `${baseLabel}-computation-year-${yearIndex + 1}`)}
                                 subjectName={member.fullName.trim() || 'Primary Member'}
                                 subjectGroup={getSubjectGroup(index)}
+                                documentOwnerType={activeDocumentOwnerType}
+                                proposerSequence={activeProposerSequence}
                                 buttonText={member.computationDocumentIds[yearIndex] ? `Replace Computation ${yearIndex + 1}` : `Upload Computation ${yearIndex + 1}`}
                                 onUploaded={(id) =>
                                   updateMember(index, (current) => {
@@ -845,6 +916,8 @@ export default function MemberInsuranceModal({
                               scope={getUploadScopeForDocument('aadhaarCard', kind, `${baseLabel}-nominee-aadhaar`)}
                               subjectName="Nominee"
                               subjectGroup={getSubjectGroup(index, true)}
+                              documentOwnerType={activeDocumentOwnerType}
+                              proposerSequence={activeProposerSequence}
                               buttonText={member.nomineeAadhaarDocumentId ? 'Replace Nominee Aadhaar' : 'Upload Nominee Aadhaar'}
                               onUploaded={(id) => updateMember(index, (current) => ({ ...current, nomineeAadhaarDocumentId: id || current.nomineeAadhaarDocumentId }))}
                             />
@@ -858,6 +931,8 @@ export default function MemberInsuranceModal({
                               scope={getUploadScopeForDocument('panCard', kind, `${baseLabel}-nominee-pan`)}
                               subjectName="Nominee"
                               subjectGroup={getSubjectGroup(index, true)}
+                              documentOwnerType={activeDocumentOwnerType}
+                              proposerSequence={activeProposerSequence}
                               buttonText={member.nomineePanDocumentId ? 'Replace Nominee PAN' : 'Upload Nominee PAN'}
                               onUploaded={(id) => updateMember(index, (current) => ({ ...current, nomineePanDocumentId: id || current.nomineePanDocumentId }))}
                             />
@@ -871,6 +946,8 @@ export default function MemberInsuranceModal({
                               scope={getUploadScopeForDocument('cancelledChequePassbook', kind, `${baseLabel}-nominee-bank-proof`)}
                               subjectName="Nominee"
                               subjectGroup={getSubjectGroup(index, true)}
+                              documentOwnerType={activeDocumentOwnerType}
+                              proposerSequence={activeProposerSequence}
                               buttonText={member.nomineeBankProofDocumentId ? 'Replace Nominee Cancelled Cheque/Passbook' : 'Upload Nominee Cancelled Cheque/Passbook'}
                               onUploaded={(id) => updateMember(index, (current) => ({ ...current, nomineeBankProofDocumentId: id || current.nomineeBankProofDocumentId }))}
                             />

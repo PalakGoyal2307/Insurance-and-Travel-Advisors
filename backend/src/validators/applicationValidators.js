@@ -173,6 +173,22 @@ const createMemberPayloadValidator = (moduleName) => [
   body('phone').trim().matches(phoneRegex).withMessage('Phone must be a valid number with 10 to 15 digits'),
   body('planName').optional().trim().isLength({ max: 120 }).withMessage('Plan name must be at most 120 characters'),
   body('sourceContext').optional().trim().isLength({ max: 150 }).withMessage('Source context must be at most 150 characters'),
+  body('proposerType').optional().isIn(['self', 'others']).withMessage('Proposer type must be self or others'),
+  body('proposerSequence').optional().isInt({ min: 1, max: 99 }).withMessage('Proposer sequence must be between 1 and 99'),
+  body().custom((payload) => {
+    const proposerType = String(payload.proposerType || 'self')
+    const hasProposerSequence = payload.proposerSequence !== undefined && payload.proposerSequence !== null && payload.proposerSequence !== ''
+
+    if (proposerType === 'others' && !hasProposerSequence) {
+      throw new Error('Proposer sequence is required when proposer type is others')
+    }
+
+    if (proposerType === 'self' && hasProposerSequence) {
+      throw new Error('Proposer sequence is allowed only when proposer type is others')
+    }
+
+    return true
+  }),
   body('primaryMember').custom((primaryMember) => {
     const error = validateMember(primaryMember, { isPrimary: true, moduleName })
     if (error) throw new Error(error)

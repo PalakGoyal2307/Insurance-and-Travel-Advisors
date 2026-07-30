@@ -33,10 +33,22 @@ export const uploadDocumentValidator = [
   body('customLabel').optional().trim().isLength({ max: 120 }).withMessage('Custom label must be at most 120 characters'),
   body('subjectName').optional().trim().isLength({ max: 120 }).withMessage('Subject name must be at most 120 characters'),
   body('subjectGroup').optional().trim().isLength({ max: 80 }).withMessage('Subject group must be at most 80 characters'),
+  body('documentOwnerType').optional().isIn(['user', 'proposer']).withMessage('Document owner type must be user or proposer'),
+  body('proposerSequence').optional().isInt({ min: 1, max: 99 }).withMessage('Proposer sequence must be between 1 and 99'),
   body().custom((payload) => {
     const scope = String(payload.scope || '')
     const documentType = String(payload.documentType || '')
     const customLabel = String(payload.customLabel || '').trim()
+    const documentOwnerType = String(payload.documentOwnerType || 'user')
+    const hasProposerSequence = payload.proposerSequence !== undefined && payload.proposerSequence !== null && payload.proposerSequence !== ''
+
+    if (documentOwnerType === 'proposer' && !hasProposerSequence) {
+      throw new Error('Proposer sequence is required for proposer documents')
+    }
+
+    if (documentOwnerType !== 'proposer' && hasProposerSequence) {
+      throw new Error('Proposer sequence can be used only for proposer documents')
+    }
 
     if (documentType === 'medicalReport' && scope !== 'health') {
       throw new Error('Medical report can only be uploaded under health scope')

@@ -101,17 +101,49 @@ const buildSubjectFolderName = ({ subjectGroup = 'Primary Member', subjectName =
   return safeSubjectName ? `${safeGroup}-${safeSubjectName}` : safeGroup
 }
 
-export const resolveDocumentFolder = async ({ customerCode, fullName, phone, subjectGroup, subjectName }) => {
+export const resolveDocumentFolder = async ({
+  customerCode,
+  fullName,
+  phone,
+  subjectGroup,
+  subjectName,
+  documentOwnerType = 'user',
+  proposerSequence = null,
+}) => {
   const folders = await ensureUserDriveFolders({ customerCode, fullName, phone })
+  const isProposerFolder = documentOwnerType === 'proposer' && Number.isFinite(Number(proposerSequence)) && Number(proposerSequence) > 0
+  const documentsRoot = isProposerFolder
+    ? await ensureFolder(`Proposer ${Number(proposerSequence)}`, folders.userFolder.id)
+    : folders.userFolder
   const subjectFolderName = buildSubjectFolderName({ subjectGroup, subjectName })
-  return ensureFolder(subjectFolderName, folders.userFolder.id)
+  return ensureFolder(subjectFolderName, documentsRoot.id)
 }
 
-export const uploadFileToDrive = async ({ customerCode, fullName, phone, storedFileName, mimeType, buffer, subjectGroup, subjectName, folderId = null }) => {
+export const uploadFileToDrive = async ({
+  customerCode,
+  fullName,
+  phone,
+  storedFileName,
+  mimeType,
+  buffer,
+  subjectGroup,
+  subjectName,
+  documentOwnerType = 'user',
+  proposerSequence = null,
+  folderId = null,
+}) => {
   const drive = getDriveClient()
   const folder = folderId
     ? { id: folderId }
-    : await resolveDocumentFolder({ customerCode, fullName, phone, subjectGroup, subjectName })
+    : await resolveDocumentFolder({
+        customerCode,
+        fullName,
+        phone,
+        subjectGroup,
+        subjectName,
+        documentOwnerType,
+        proposerSequence,
+      })
   const stream = Readable.from(buffer)
   const response = await drive.files.create({
     requestBody: {

@@ -123,6 +123,30 @@ export default function AdminDashboardPage({ navigate }: Props) {
         })
       : []
 
+  const filteredUserOwnedDocuments = filteredUserDocuments.filter(
+    (doc) => String(doc.documentOwnerType || 'user') !== 'proposer'
+  )
+
+  const filteredProposerDocumentGroups = filteredUserDocuments.reduce<Record<string, Array<Record<string, unknown>>>>((acc, doc) => {
+    if (String(doc.documentOwnerType || 'user') !== 'proposer') {
+      return acc
+    }
+    const sequence = Number(doc.proposerSequence || 0)
+    if (sequence < 1) {
+      return acc
+    }
+    const key = String(sequence)
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(doc)
+    return acc
+  }, {})
+
+  const proposerDocumentGroups = Object.entries(filteredProposerDocumentGroups)
+    .map(([sequence, documents]) => ({ sequence: Number(sequence), documents }))
+    .sort((a, b) => a.sequence - b.sequence)
+
   return (
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
       {selectedApplication && selectedUserDetails && 'uploadedDocuments' in selectedUserDetails && Array.isArray(selectedUserDetails.uploadedDocuments) && (
@@ -185,6 +209,7 @@ export default function AdminDashboardPage({ navigate }: Props) {
                   <tr>
                     <th className="text-left px-4 py-3 font-bold">Customer Code</th>
                     <th className="text-left px-4 py-3 font-bold">Full Name</th>
+                    <th className="text-left px-4 py-3 font-bold">Proposer Name</th>
                     <th className="text-left px-4 py-3 font-bold">Email</th>
                     <th className="text-left px-4 py-3 font-bold">Phone</th>
                     <th className="text-left px-4 py-3 font-bold">Created</th>
@@ -196,6 +221,7 @@ export default function AdminDashboardPage({ navigate }: Props) {
                     <tr key={user._id} className="border-t border-blue-100">
                       <td className="px-4 py-3 text-gray-700">{user.customerCode}</td>
                       <td className="px-4 py-3 font-semibold text-[#0D2B5E]">{user.fullName}</td>
+                      <td className="px-4 py-3 text-gray-700">{user.proposerName || '-'}</td>
                       <td className="px-4 py-3 text-gray-700">{user.email}</td>
                       <td className="px-4 py-3 text-gray-700">{user.phone}</td>
                       <td className="px-4 py-3 text-gray-700">{new Date(user.createdAt).toLocaleString()}</td>
@@ -244,7 +270,7 @@ export default function AdminDashboardPage({ navigate }: Props) {
               {'uploadedDocuments' in selectedUserDetails && Array.isArray(selectedUserDetails.uploadedDocuments) && (
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                    <h3 className="text-lg font-bold text-[#0D2B5E]">Uploaded Documents</h3>
+                    <h3 className="text-lg font-bold text-[#0D2B5E]">User Uploaded Documents</h3>
                     <input
                       value={documentSearch}
                       onChange={(event) => setDocumentSearch(event.target.value)}
@@ -252,6 +278,7 @@ export default function AdminDashboardPage({ navigate }: Props) {
                       placeholder="Search this user's documents"
                     />
                   </div>
+
                   <div className="overflow-auto rounded-2xl border border-blue-100">
                     <table className="w-full text-sm">
                       <thead className="bg-blue-50 text-[#0D2B5E]">
@@ -263,39 +290,79 @@ export default function AdminDashboardPage({ navigate }: Props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredUserDocuments.map((doc, index) => (
-                          <tr key={String(doc.id || index)} className="border-t border-blue-100">
-                            <td className="px-4 py-3 text-gray-700">{
-                              getFormattedAdminDocumentLabel(
-                                String(doc.label || ''),
-                                String(doc.customLabel || ''),
-                                String(doc.documentType || '')
-                              )
-                            }</td>
-                            <td className="px-4 py-3 text-gray-700">{String(doc.scope || '')}</td>
-                            <td className="px-4 py-3 text-gray-700">{String(doc.originalFileName || '')}</td>
-                            <td className="px-4 py-3">
-                              {typeof doc.id === 'string' && doc.id.trim() ? (
-                                <div className="flex flex-wrap gap-2">
-                                  <a href={getDocumentViewUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">View</a>
-                                  <a href={getDocumentDownloadUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">Download</a>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-gray-500">Unavailable</span>
-                              )}
-                            </td>
+                        {filteredUserOwnedDocuments.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No user documents found.</td>
                           </tr>
-                        ))}
-                        {filteredUserDocuments.length === 0 && (
-                          <tr className="border-t border-blue-100">
-                            <td colSpan={4} className="px-4 py-4 text-sm text-gray-500">
-                              No matching documents found.
-                            </td>
-                          </tr>
+                        ) : (
+                          filteredUserOwnedDocuments.map((doc, index) => (
+                            <tr key={String(doc.id || index)} className="border-t border-blue-100">
+                              <td className="px-4 py-3 text-gray-700">
+                                {getFormattedAdminDocumentLabel(
+                                  String(doc.label || ''),
+                                  String(doc.customLabel || ''),
+                                  String(doc.documentType || '')
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-gray-700">{String(doc.scope || '')}</td>
+                              <td className="px-4 py-3 text-gray-700">{String(doc.originalFileName || '')}</td>
+                              <td className="px-4 py-3">
+                                {typeof doc.id === 'string' && doc.id.trim() ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    <a href={getDocumentViewUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">View</a>
+                                    <a href={getDocumentDownloadUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">Download</a>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-gray-500">Unavailable</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
                         )}
                       </tbody>
                     </table>
                   </div>
+
+                  {proposerDocumentGroups.map((group) => (
+                    <div key={`proposer-doc-group-${group.sequence}`} className="overflow-auto rounded-2xl border border-blue-100 mt-5">
+                      <div className="bg-blue-50 px-4 py-3 text-sm font-bold text-[#0D2B5E]">Proposer {group.sequence} Documents</div>
+                      <table className="w-full text-sm">
+                        <thead className="bg-blue-50/60 text-[#0D2B5E]">
+                          <tr>
+                            <th className="text-left px-4 py-3 font-bold">Label</th>
+                            <th className="text-left px-4 py-3 font-bold">Scope</th>
+                            <th className="text-left px-4 py-3 font-bold">File</th>
+                            <th className="text-left px-4 py-3 font-bold">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.documents.map((doc, index) => (
+                            <tr key={String(doc.id || `${group.sequence}-${index}`)} className="border-t border-blue-100">
+                              <td className="px-4 py-3 text-gray-700">
+                                {getFormattedAdminDocumentLabel(
+                                  String(doc.label || ''),
+                                  String(doc.customLabel || ''),
+                                  String(doc.documentType || '')
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-gray-700">{String(doc.scope || '')}</td>
+                              <td className="px-4 py-3 text-gray-700">{String(doc.originalFileName || '')}</td>
+                              <td className="px-4 py-3">
+                                {typeof doc.id === 'string' && doc.id.trim() ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    <a href={getDocumentViewUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">View</a>
+                                    <a href={getDocumentDownloadUrl(doc.id)} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#0D2B5E] border border-blue-200 hover:bg-blue-50">Download</a>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 text-xs">Unavailable</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
                 </div>
               )}
 

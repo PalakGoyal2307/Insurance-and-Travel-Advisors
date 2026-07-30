@@ -30,6 +30,12 @@ const createApplicationFactory = (moduleName, Model) => asyncHandler(async (req,
       ...member,
       memberNumber: index + 2,
     }))
+
+    payload.proposerType = payload.proposerType === 'others' ? 'others' : 'self'
+    payload.proposerSequence = payload.proposerType === 'others' ? Number(payload.proposerSequence) : null
+    payload.proposerName = payload.proposerType === 'others'
+      ? String(payload.primaryMember.fullName || '').trim()
+      : ''
   }
 
   const application = await Model.create({

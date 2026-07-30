@@ -25,6 +25,8 @@ const mapDocument = (document) => ({
   scope: document.scope,
   documentType: document.documentType,
   applicationId: document.applicationId,
+  documentOwnerType: document.documentOwnerType || 'user',
+  proposerSequence: document.proposerSequence || null,
   label: DOCUMENT_TYPES[document.documentType]?.label || document.customLabel || document.documentType,
   customLabel: document.customLabel,
   originalFileName: document.originalFileName,
@@ -100,10 +102,15 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'A document file is required')
   }
 
-  const { scope, documentType, customLabel = '', applicationId, subjectName = '', subjectGroup = '' } = req.body
+  const { scope, documentType, customLabel = '', applicationId, subjectName = '', subjectGroup = '', documentOwnerType = 'user' } = req.body
   const normalizedCustomLabel = String(customLabel || '').trim()
   const normalizedSubjectName = String(subjectName || '').trim() || req.user.fullName
   const normalizedSubjectGroup = String(subjectGroup || '').trim() || 'Primary Member'
+  const normalizedDocumentOwnerType = String(documentOwnerType || 'user').trim().toLowerCase() === 'proposer' ? 'proposer' : 'user'
+  const parsedProposerSequence = Number(req.body.proposerSequence)
+  const normalizedProposerSequence = normalizedDocumentOwnerType === 'proposer'
+    ? (Number.isFinite(parsedProposerSequence) && parsedProposerSequence > 0 ? Math.floor(parsedProposerSequence) : null)
+    : null
 
   if (documentType === 'aadhaarCard') {
     await validateAadhaarPdfPageConstraints({
@@ -126,6 +133,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     documentType,
     applicationId: applicationId || null,
     customLabel: normalizedCustomLabel,
+    documentOwnerType: normalizedDocumentOwnerType,
+    proposerSequence: normalizedProposerSequence,
     isActive: true,
   })
 
@@ -138,6 +147,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     buffer: req.file.buffer,
     subjectName: normalizedSubjectName,
     subjectGroup: normalizedSubjectGroup,
+    documentOwnerType: normalizedDocumentOwnerType,
+    proposerSequence: normalizedProposerSequence,
     folderId: existingDocument?.googleDriveFolderId || null,
   })
 
@@ -147,6 +158,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     documentType,
     applicationId: applicationId || null,
     customLabel: normalizedCustomLabel,
+    documentOwnerType: normalizedDocumentOwnerType,
+    proposerSequence: normalizedProposerSequence,
     originalFileName: req.file.originalname,
     storedFileName,
     mimeType: req.file.mimetype,

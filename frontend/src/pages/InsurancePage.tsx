@@ -49,6 +49,26 @@ interface RequirementItem {
   } | null
 }
 
+const getNextProposerSequenceFromProfile = (profile: Awaited<ReturnType<typeof getMyProfile>>) => {
+  let maxSequence = 0
+
+  for (const document of profile.uploadedDocuments || []) {
+    if (document.documentOwnerType === 'proposer') {
+      maxSequence = Math.max(maxSequence, Number(document.proposerSequence) || 0)
+    }
+  }
+
+  for (const moduleName of ['health', 'life'] as const) {
+    for (const application of profile.applications?.[moduleName] || []) {
+      if (application.proposerType === 'others') {
+        maxSequence = Math.max(maxSequence, Number(application.proposerSequence) || 0)
+      }
+    }
+  }
+
+  return maxSequence + 1
+}
+
 function RequirementChecklist({
   requirements,
   scope,
@@ -261,6 +281,7 @@ function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formSent, setFormSent] = useState(false)
   const [existingDocuments, setExistingDocuments] = useState<ProfileDocumentItem[]>([])
+  const [nextProposerSequence, setNextProposerSequence] = useState(1)
 
   const openPopup = async (type: HealthPopupType, planName = '') => {
     if (!currentUser) {
@@ -271,8 +292,10 @@ function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) 
     try {
       const profile = await getMyProfile()
       setExistingDocuments(profile.uploadedDocuments || [])
+      setNextProposerSequence(getNextProposerSequenceFromProfile(profile))
     } catch (_error) {
       setExistingDocuments([])
+      setNextProposerSequence(1)
     }
 
     setPopupType(type)
@@ -305,12 +328,16 @@ function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) 
     fullName,
     email,
     phone,
+    proposerType,
+    proposerSequence,
     primaryMember,
     additionalMembers,
   }: {
     fullName: string
     email: string
     phone: string
+    proposerType: 'self' | 'others'
+    proposerSequence?: number
     primaryMember: InsuranceMemberPayload
     additionalMembers: InsuranceMemberPayload[]
   }) => {
@@ -332,6 +359,8 @@ function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) 
         fullName,
         email,
         phone,
+        proposerType,
+        proposerSequence,
         primaryMember,
         additionalMembers,
         planName: planLabel,
@@ -384,6 +413,7 @@ function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) 
           kind="health"
           planLabel={selectedPlan || 'General Health Insurance Consultation'}
           existingDocuments={existingDocuments}
+          nextProposerSequence={nextProposerSequence}
           prefillUser={currentUser ? { fullName: currentUser.fullName, email: currentUser.email, phone: currentUser.phone } : null}
           isSubmitting={isSubmitting}
           errorMessage={formError}
@@ -451,6 +481,7 @@ function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) =>
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formSent, setFormSent] = useState(false)
   const [existingDocuments, setExistingDocuments] = useState<ProfileDocumentItem[]>([])
+  const [nextProposerSequence, setNextProposerSequence] = useState(1)
 
   const openPopup = async (type: LifePopupType, planName = '') => {
     if (!currentUser) {
@@ -461,8 +492,10 @@ function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) =>
     try {
       const profile = await getMyProfile()
       setExistingDocuments(profile.uploadedDocuments || [])
+      setNextProposerSequence(getNextProposerSequenceFromProfile(profile))
     } catch (_error) {
       setExistingDocuments([])
+      setNextProposerSequence(1)
     }
 
     setPopupType(type)
@@ -495,12 +528,16 @@ function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) =>
     fullName,
     email,
     phone,
+    proposerType,
+    proposerSequence,
     primaryMember,
     additionalMembers,
   }: {
     fullName: string
     email: string
     phone: string
+    proposerType: 'self' | 'others'
+    proposerSequence?: number
     primaryMember: InsuranceMemberPayload
     additionalMembers: InsuranceMemberPayload[]
   }) => {
@@ -522,6 +559,8 @@ function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) =>
         fullName,
         email,
         phone,
+        proposerType,
+        proposerSequence,
         primaryMember,
         additionalMembers,
         planName: planLabel,
@@ -574,6 +613,7 @@ function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) =>
           kind="life"
           planLabel={selectedPlan || 'General LIC Consultation'}
           existingDocuments={existingDocuments}
+          nextProposerSequence={nextProposerSequence}
           prefillUser={currentUser ? { fullName: currentUser.fullName, email: currentUser.email, phone: currentUser.phone } : null}
           isSubmitting={isSubmitting}
           errorMessage={formError}

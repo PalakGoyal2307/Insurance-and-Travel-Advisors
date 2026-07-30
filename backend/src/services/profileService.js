@@ -9,6 +9,8 @@ const mapDocument = (document) => ({
   scope: document.scope,
   documentType: document.documentType,
   applicationId: document.applicationId,
+  documentOwnerType: document.documentOwnerType || 'user',
+  proposerSequence: document.proposerSequence || null,
   label: DOCUMENT_TYPES[document.documentType]?.label || document.customLabel || document.documentType,
   customLabel: document.customLabel,
   originalFileName: document.originalFileName,
@@ -36,6 +38,9 @@ const mapApplication = (application, moduleName) => ({
   businessType: application.businessType,
   coverageType: application.coverageType,
   requirements: application.requirements,
+  proposerType: application.proposerType || 'self',
+  proposerSequence: application.proposerSequence || null,
+  proposerName: application.proposerName || '',
   primaryMember: application.primaryMember,
   additionalMembers: application.additionalMembers,
 })
@@ -48,9 +53,11 @@ export const buildProfileBundle = async (userId) => {
     GeneralApplication.find({ userId }).sort({ createdAt: -1 }).lean(),
   ])
 
+  const userOwnedDocuments = documents.filter((document) => document.documentOwnerType !== 'proposer')
+
   const documentsByKey = new Map()
   const documentsByType = new Map()
-  for (const document of documents) {
+  for (const document of userOwnedDocuments) {
     documentsByKey.set(`${document.scope}:${document.documentType}:${document.applicationId || 'shared'}`, document)
     if (!documentsByType.has(document.documentType)) {
       documentsByType.set(document.documentType, document)
