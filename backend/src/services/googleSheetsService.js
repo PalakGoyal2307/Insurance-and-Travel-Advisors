@@ -17,6 +17,36 @@ const SENSITIVE_FIELDS = new Set([
   'api_key',
 ])
 const DOCUMENT_FIELD_PATTERN = /(document|documents|file|files|attachment|attachments|upload|uploads|proof|proofs)/i
+const FIELD_LABELS = {
+  fullName: 'Name',
+  name: 'Name',
+  email: 'Email',
+  phone: 'Phone',
+  mobile: 'Phone',
+  dob: 'DOB',
+  dateOfBirth: 'DOB',
+  heightFeet: 'Height Feet',
+  heightInch: 'Height Inch',
+  weightKg: 'Weight',
+  weight: 'Weight',
+  address: 'Address',
+  pincode: 'Pincode',
+  gender: 'Gender',
+  relation: 'Relation',
+  pan: 'PAN',
+  panNumber: 'PAN',
+  aadhaar: 'Aadhaar',
+  aadhaarNumber: 'Aadhaar',
+  occupation: 'Occupation',
+  annualIncome: 'Annual Income',
+  smoking: 'Smoking',
+  medicalHistory: 'Medical History',
+  message: 'Message',
+  subject: 'Subject',
+  context: 'Context',
+  source: 'Source',
+  company: 'Company',
+}
 
 let cachedSheetsClient = null
 let cachedSpreadsheetId = null
@@ -140,40 +170,95 @@ const shouldSkipField = (fieldName) => {
   return SENSITIVE_FIELDS.has(normalized) || DOCUMENT_FIELD_PATTERN.test(normalized)
 }
 
-const flattenPayload = (source, prefix = '') => {
-  if (Array.isArray(source)) {
-    return source.flatMap((item, index) => flattenPayload(item, `${prefix}[${index}]`))
-  }
-
+const findValue = (source, aliases) => {
   if (!source || typeof source !== 'object') {
-    return []
+    return ''
   }
 
-  return Object.entries(source).flatMap(([fieldName, value]) => {
-    const nextPrefix = prefix ? `${prefix}_${fieldName}` : fieldName
-
-    if (shouldSkipField(nextPrefix)) {
-      return []
+  for (const alias of aliases) {
+    const value = source[alias]
+    if (value !== undefined && value !== null && value !== '') {
+      return normalizeValue(value)
     }
+  }
 
-    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
-      return flattenPayload(value, nextPrefix)
-    }
+  return ''
+}
 
-    return [{ header: nextPrefix, value }]
-  })
+const makeHeader = (label, fieldName) => {
+  const friendlyFieldName = FIELD_LABELS[fieldName] || fieldName.replace(/([a-z])([A-Z])/g, '$1 $2')
+  return `${label} ${friendlyFieldName}`.trim()
+}
+
+const addEntry = (values, header, value) => {
+  if (value === undefined || value === null || value === '') {
+    return
+  }
+
+  values[header] = normalizeValue(value)
 }
 
 const collectStructuredValues = (payload) => {
   const values = {}
 
-  flattenPayload(payload).forEach(({ header, value }) => {
-    if (value === undefined || value === null || value === '') {
+  Object.keys(FIELD_LABELS).forEach((fieldName) => {
+    if (shouldSkipField(fieldName)) {
       return
     }
 
-    values[header] = normalizeValue(value)
+    const value = payload[fieldName]
+    if (value !== undefined && value !== null && value !== '') {
+      addEntry(values, FIELD_LABELS[fieldName], value)
+    }
   })
+
+  if (payload.primaryMember && typeof payload.primaryMember === 'object') {
+    const primaryMember = payload.primaryMember
+    addEntry(values, makeHeader('Primary Member', 'fullName'), findValue(primaryMember, ['fullName', 'name']))
+    addEntry(values, makeHeader('Primary Member', 'email'), findValue(primaryMember, ['email']))
+    addEntry(values, makeHeader('Primary Member', 'phone'), findValue(primaryMember, ['phone', 'mobile']))
+    addEntry(values, makeHeader('Primary Member', 'dob'), findValue(primaryMember, ['dob', 'dateOfBirth']))
+    addEntry(values, makeHeader('Primary Member', 'heightFeet'), findValue(primaryMember, ['heightFeet']))
+    addEntry(values, makeHeader('Primary Member', 'heightInch'), findValue(primaryMember, ['heightInch']))
+    addEntry(values, makeHeader('Primary Member', 'weightKg'), findValue(primaryMember, ['weightKg', 'weight']))
+    addEntry(values, makeHeader('Primary Member', 'address'), findValue(primaryMember, ['address']))
+    addEntry(values, makeHeader('Primary Member', 'pincode'), findValue(primaryMember, ['pincode']))
+    addEntry(values, makeHeader('Primary Member', 'gender'), findValue(primaryMember, ['gender']))
+    addEntry(values, makeHeader('Primary Member', 'relation'), findValue(primaryMember, ['relation']))
+    addEntry(values, makeHeader('Primary Member', 'pan'), findValue(primaryMember, ['pan', 'panNumber']))
+    addEntry(values, makeHeader('Primary Member', 'aadhaar'), findValue(primaryMember, ['aadhaar', 'aadhaarNumber']))
+    addEntry(values, makeHeader('Primary Member', 'occupation'), findValue(primaryMember, ['occupation']))
+    addEntry(values, makeHeader('Primary Member', 'annualIncome'), findValue(primaryMember, ['annualIncome']))
+    addEntry(values, makeHeader('Primary Member', 'smoking'), findValue(primaryMember, ['smoking']))
+    addEntry(values, makeHeader('Primary Member', 'medicalHistory'), findValue(primaryMember, ['medicalHistory']))
+  }
+
+  if (Array.isArray(payload.additionalMembers)) {
+    payload.additionalMembers.forEach((member, index) => {
+      if (!member || typeof member !== 'object') {
+        return
+      }
+
+      const memberLabel = String(member.relation || '').trim() || `Member ${index + 1}`
+      addEntry(values, makeHeader(memberLabel, 'fullName'), findValue(member, ['fullName', 'name']))
+      addEntry(values, makeHeader(memberLabel, 'email'), findValue(member, ['email']))
+      addEntry(values, makeHeader(memberLabel, 'phone'), findValue(member, ['phone', 'mobile']))
+      addEntry(values, makeHeader(memberLabel, 'dob'), findValue(member, ['dob', 'dateOfBirth']))
+      addEntry(values, makeHeader(memberLabel, 'heightFeet'), findValue(member, ['heightFeet']))
+      addEntry(values, makeHeader(memberLabel, 'heightInch'), findValue(member, ['heightInch']))
+      addEntry(values, makeHeader(memberLabel, 'weightKg'), findValue(member, ['weightKg', 'weight']))
+      addEntry(values, makeHeader(memberLabel, 'address'), findValue(member, ['address']))
+      addEntry(values, makeHeader(memberLabel, 'pincode'), findValue(member, ['pincode']))
+      addEntry(values, makeHeader(memberLabel, 'gender'), findValue(member, ['gender']))
+      addEntry(values, makeHeader(memberLabel, 'relation'), findValue(member, ['relation']))
+      addEntry(values, makeHeader(memberLabel, 'pan'), findValue(member, ['pan', 'panNumber']))
+      addEntry(values, makeHeader(memberLabel, 'aadhaar'), findValue(member, ['aadhaar', 'aadhaarNumber']))
+      addEntry(values, makeHeader(memberLabel, 'occupation'), findValue(member, ['occupation']))
+      addEntry(values, makeHeader(memberLabel, 'annualIncome'), findValue(member, ['annualIncome']))
+      addEntry(values, makeHeader(memberLabel, 'smoking'), findValue(member, ['smoking']))
+      addEntry(values, makeHeader(memberLabel, 'medicalHistory'), findValue(member, ['medicalHistory']))
+    })
+  }
 
   return values
 }
