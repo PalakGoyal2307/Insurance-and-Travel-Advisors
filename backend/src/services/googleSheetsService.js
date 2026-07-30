@@ -206,6 +206,26 @@ const addEntry = (values, header, value) => {
   values[header] = normalizeValue(value)
 }
 
+const addDiseaseEntries = (values, memberLabel, member) => {
+  if (!member || typeof member !== 'object' || !member.diseases || typeof member.diseases !== 'object') {
+    return
+  }
+
+  const { diseases } = member
+  const mode = normalizeValue(diseases.mode)
+  const names = Array.isArray(diseases.names)
+    ? diseases.names
+      .map((name) => normalizeValue(name))
+      .filter(Boolean)
+      .join(', ')
+    : ''
+  const otherText = normalizeValue(diseases.otherText)
+
+  addEntry(values, `${memberLabel} Disease Mode`, mode)
+  addEntry(values, `${memberLabel} Diseases`, names)
+  addEntry(values, `${memberLabel} Other Disease`, otherText)
+}
+
 const collectStructuredValues = (payload) => {
   const values = {}
 
@@ -239,6 +259,7 @@ const collectStructuredValues = (payload) => {
     addEntry(values, makeHeader('Primary Member', 'annualIncome'), findValue(primaryMember, ['annualIncome']))
     addEntry(values, makeHeader('Primary Member', 'smoking'), findValue(primaryMember, ['smoking']))
     addEntry(values, makeHeader('Primary Member', 'medicalHistory'), findValue(primaryMember, ['medicalHistory']))
+    addDiseaseEntries(values, 'Primary Member', primaryMember)
   }
 
   if (Array.isArray(payload.additionalMembers)) {
@@ -265,6 +286,7 @@ const collectStructuredValues = (payload) => {
       addEntry(values, makeHeader(memberLabel, 'annualIncome'), findValue(member, ['annualIncome']))
       addEntry(values, makeHeader(memberLabel, 'smoking'), findValue(member, ['smoking']))
       addEntry(values, makeHeader(memberLabel, 'medicalHistory'), findValue(member, ['medicalHistory']))
+      addDiseaseEntries(values, memberLabel, member)
     })
   }
 
