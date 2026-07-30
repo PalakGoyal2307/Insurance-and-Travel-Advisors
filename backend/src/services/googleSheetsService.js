@@ -54,7 +54,7 @@ const FIELD_LABELS = {
   company: 'Company',
 }
 
-const INSURANCE_MEMBER_FIELD_HEADERS = [
+const PRIMARY_MEMBER_FIELD_HEADERS = [
   'Name',
   'DOB',
   'Age',
@@ -63,6 +63,18 @@ const INSURANCE_MEMBER_FIELD_HEADERS = [
   'Weight',
   'Address',
   'Pincode',
+  'Disease Mode',
+  'Diseases',
+  'Other Disease',
+]
+
+const NON_PRIMARY_MEMBER_FIELD_HEADERS = [
+  'Name',
+  'DOB',
+  'Age',
+  'Height Feet',
+  'Height Inch',
+  'Weight',
   'Relation',
   'Disease Mode',
   'Diseases',
@@ -71,10 +83,10 @@ const INSURANCE_MEMBER_FIELD_HEADERS = [
 
 const getInsuranceFixedHeaders = () => {
   const headers = [...INSURANCE_TOP_LEVEL_HEADERS]
-  headers.push(...INSURANCE_MEMBER_FIELD_HEADERS.map((field) => `Primary Member ${field}`))
+  headers.push(...PRIMARY_MEMBER_FIELD_HEADERS.map((field) => `Primary Member ${field}`))
 
   for (let index = 1; index <= MAX_ADDITIONAL_MEMBERS; index += 1) {
-    headers.push(...INSURANCE_MEMBER_FIELD_HEADERS.map((field) => `Member ${index} ${field}`))
+    headers.push(...NON_PRIMARY_MEMBER_FIELD_HEADERS.map((field) => `Member ${index} ${field}`))
   }
 
   return headers
@@ -290,7 +302,6 @@ const collectStructuredValues = (payload) => {
     addEntry(values, makeHeader('Primary Member', 'address'), findValue(primaryMember, ['address']))
     addEntry(values, makeHeader('Primary Member', 'pincode'), findValue(primaryMember, ['pincode']))
     addEntry(values, makeHeader('Primary Member', 'gender'), findValue(primaryMember, ['gender']))
-    addEntry(values, makeHeader('Primary Member', 'relation'), findValue(primaryMember, ['relation']))
     addEntry(values, makeHeader('Primary Member', 'pan'), findValue(primaryMember, ['pan', 'panNumber']))
     addEntry(values, makeHeader('Primary Member', 'aadhaar'), findValue(primaryMember, ['aadhaar', 'aadhaarNumber']))
     addEntry(values, makeHeader('Primary Member', 'occupation'), findValue(primaryMember, ['occupation']))
@@ -315,8 +326,6 @@ const collectStructuredValues = (payload) => {
       addEntry(values, makeHeader(memberLabel, 'heightFeet'), findValue(member, ['heightFeet']))
       addEntry(values, makeHeader(memberLabel, 'heightInch'), findValue(member, ['heightInch']))
       addEntry(values, makeHeader(memberLabel, 'weightKg'), findValue(member, ['weightKg', 'weight']))
-      addEntry(values, makeHeader(memberLabel, 'address'), findValue(member, ['address']))
-      addEntry(values, makeHeader(memberLabel, 'pincode'), findValue(member, ['pincode']))
       addEntry(values, makeHeader(memberLabel, 'gender'), findValue(member, ['gender']))
       addEntry(values, makeHeader(memberLabel, 'relation'), findValue(member, ['relation']))
       addEntry(values, makeHeader(memberLabel, 'pan'), findValue(member, ['pan', 'panNumber']))
