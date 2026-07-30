@@ -247,7 +247,7 @@ const collectStructuredValues = (payload) => {
         return
       }
 
-      const memberLabel = String(member.relation || '').trim() || `Member ${index + 1}`
+      const memberLabel = `Member ${index + 1}`
       addEntry(values, makeHeader(memberLabel, 'fullName'), findValue(member, ['fullName', 'name']))
       addEntry(values, makeHeader(memberLabel, 'email'), findValue(member, ['email']))
       addEntry(values, makeHeader(memberLabel, 'phone'), findValue(member, ['phone', 'mobile']))
