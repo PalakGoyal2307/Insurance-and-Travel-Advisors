@@ -1,24 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import type { PageId } from '../App'
-import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL } from '../constants/contact'
 import type { AuthUser } from '../utils/authApi'
 
 interface Props {
   navigate: (p: PageId) => void
   currentUser: AuthUser | null
-}
-
-type ReligiousPopupType = 'trip-enquiry' | 'plan-pilgrimage'
-
-interface ReligiousFormState {
-  name: string
-  phone: string
-  email: string
-  city: string
-  pilgrims: string
-  travelMonth: string
-  specialRequirements: string
 }
 
 const religiousTrips = [
@@ -114,193 +101,20 @@ const religiousTrips = [
   },
 ]
 
-export default function ReligiousTripsPage({ navigate, currentUser }: Props) {
-  const [popupType, setPopupType] = useState<ReligiousPopupType | null>(null)
-  const [selectedTrip, setSelectedTrip] = useState('')
-  const [formError, setFormError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formSent, setFormSent] = useState(false)
-  const [form, setForm] = useState<ReligiousFormState>({
-    name: currentUser?.fullName || '',
-    phone: currentUser?.phone || '',
-    email: currentUser?.email || '',
-    city: '',
-    pilgrims: '',
-    travelMonth: '',
-    specialRequirements: '',
-  })
-
-  useEffect(() => {
-    if (!currentUser) return
-    setForm((prev) => ({
-      ...prev,
-      name: prev.name || currentUser.fullName,
-      phone: prev.phone || currentUser.phone,
-      email: prev.email || currentUser.email,
-    }))
-  }, [currentUser])
-
-  const openReligiousPopup = (type: ReligiousPopupType, tripName = '') => {
-    setPopupType(type)
-    setSelectedTrip(tripName)
-    setFormError('')
-    setFormSent(false)
-  }
-
-  const closeReligiousPopup = () => {
-    setPopupType(null)
-    setSelectedTrip('')
-    setFormError('')
-  }
-
-  const updateForm = (field: keyof ReligiousFormState, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-  }
-
-  const popupMeta = popupType === 'trip-enquiry'
-    ? { title: 'Enquire For Pilgrimage Place', context: 'religious:popup:trip-enquiry', submitLabel: 'Submit Place Enquiry' }
-    : { title: 'Plan My Pilgrimage', context: 'religious:popup:plan-pilgrimage', submitLabel: 'Submit Pilgrimage Plan' }
-
-  const handleReligiousSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const name = form.name.trim()
-    const phone = form.phone.trim()
-    const email = form.email.trim()
-    const city = form.city.trim()
-    const pilgrims = form.pilgrims.trim()
-    const travelMonth = form.travelMonth.trim()
-    const specialRequirements = form.specialRequirements.trim()
-
-    if (!popupType) return
-
-    if (!name || !phone || !email) {
-      setFormError('Please fill all required fields.')
-      return
-    }
-
-    if (!/^\+?\d{10,15}$/.test(phone.replace(/\s+/g, ''))) {
-      setFormError('Please enter a valid phone number with 10 to 15 digits.')
-      return
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFormError('Please enter a valid email address.')
-      return
-    }
-
-    setFormError('')
-    setIsSubmitting(true)
-
-    const inquiryType = popupType === 'trip-enquiry' ? 'Religious Place Enquiry' : 'Pilgrimage Planning Request'
-    const subject = `[${inquiryType}] ${name}${selectedTrip ? ` - ${selectedTrip}` : ''}`
-    const fullMessage = [
-      `Inquiry Type: ${inquiryType}`,
-     
-      `Selected Place: ${selectedTrip || 'General Pilgrimage Plan'}`,
-      
-      `City: ${city || 'N/A'}`,
-      `Number of Pilgrims: ${pilgrims || 'N/A'}`,
-      `Preferred Travel Month/Dates: ${travelMonth || 'N/A'}`,
-      `Special Requirements: ${specialRequirements || 'N/A'}`,
-    ].join('\n')
-
-    try {
-      const sentByEmailJs = await sendEmailWithAutoReply({
-        ownerEmail: CONTACT_EMAIL,
-        userEmail: email,
-        userName: name,
-        ownerSubject: subject,
-        ownerMessage: fullMessage,
-        autoReplySubject: 'Thank you for your pilgrimage enquiry - PNP Advisors',
-        autoReplyMessage: buildAutoReplyMessage(name, fullMessage),
-        ownerTemplateParams: {
-          phone,
-          context: popupMeta.context,
-          inquiry_type: inquiryType,
-          selected_place: selectedTrip || 'General Pilgrimage Plan',
-          city: city || 'N/A',
-          pilgrims: pilgrims || 'N/A',
-          travel_month: travelMonth || 'N/A',
-          requirements: specialRequirements || 'N/A',
-        },
-        autoReplyTemplateParams: {
-          phone,
-          context: popupMeta.context,
-          inquiry_type: inquiryType,
-          selected_place: selectedTrip || 'General Pilgrimage Plan',
-        },
-      })
-
-      if (!sentByEmailJs) {
-        window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullMessage)}`
+export default function ReligiousTripsPage({ navigate, currentUser: _currentUser }: Props) {
+  const openTravelForm = useMemo(() => {
+    return (action: string, pkg = '') => {
+      const params = new URLSearchParams({ action })
+      if (pkg) {
+        params.set('pkg', pkg)
       }
-
-      setFormSent(true)
-      setForm({
-        name: currentUser?.fullName || '',
-        phone: currentUser?.phone || '',
-        email: currentUser?.email || '',
-        city: '',
-        pilgrims: '',
-        travelMonth: '',
-        specialRequirements: '',
-      })
-      setTimeout(() => {
-        closeReligiousPopup()
-      }, 1400)
-    } catch (error) {
-      console.error('Religious query send failed', error)
-      window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullMessage)}`
-      closeReligiousPopup()
-    } finally {
-      setIsSubmitting(false)
+      const query = params.toString()
+      window.location.href = query ? `/travel/form?${query}` : '/travel/form'
     }
-  }
+  }, [])
 
   return (
     <div className="pt-20">
-      {popupType && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={closeReligiousPopup}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-6 sm:p-8 border-b border-amber-100">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl text-[#0D2B5E] font-bold">{popupMeta.title}</h2>
-                  <p className="text-gray-500 text-sm mt-1">Religious query form with clear context for founder visibility.</p>
-                </div>
-                <button onClick={closeReligiousPopup} className="rounded-full p-2 text-gray-500 hover:bg-gray-100">✕</button>
-              </div>
-            </div>
-
-            <form onSubmit={handleReligiousSubmit} className="p-6 sm:p-8 space-y-4">
-              {formSent && <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">Religious query sent successfully.</div>}
-              {formError && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div>}
-
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-[#0D2B5E]">
-                Selected Place: <span className="font-bold">{selectedTrip || 'General Pilgrimage Planning'}</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input value={form.name} onChange={e => updateForm('name', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Full Name*" required />
-                <input value={form.phone} onChange={e => updateForm('phone', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Phone Number*" required />
-                <input type="email" value={form.email} onChange={e => updateForm('email', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Email*" required />
-                <input value={form.city} onChange={e => updateForm('city', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="City (Optional)" />
-                <input value={form.pilgrims} onChange={e => updateForm('pilgrims', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Number of Pilgrims (Optional)" />
-                <input value={form.travelMonth} onChange={e => updateForm('travelMonth', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Travel Month / Dates (Optional)" />
-              </div>
-
-              <textarea value={form.specialRequirements} onChange={e => updateForm('specialRequirements', e.target.value)} rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Special Requirements (Optional)" />
-
-              <button type="submit" disabled={isSubmitting} className="w-full py-3.5 rounded-xl font-bold text-white text-sm disabled:opacity-70" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
-                {isSubmitting ? 'Sending...' : popupMeta.submitLabel}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Hero */}
       <div className="relative min-h-[22rem] flex items-center justify-center text-center px-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0a00, #6b2c00, #F47B20)' }}>
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='white' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
@@ -354,7 +168,7 @@ export default function ReligiousTripsPage({ navigate, currentUser }: Props) {
                   <span>📅 Best: {trip.bestTime}</span>
                 </div>
                 <button
-                  onClick={() => openReligiousPopup('trip-enquiry', trip.name)}
+                  onClick={() => openTravelForm('trip-enquiry', trip.name)}
                   className="block w-full text-center py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}
                 >
@@ -383,7 +197,7 @@ export default function ReligiousTripsPage({ navigate, currentUser }: Props) {
             ))}
           </div>
           <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={() => openReligiousPopup('plan-pilgrimage')} className="inline-block px-10 py-4 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+            <button onClick={() => openTravelForm('plan-pilgrimage')} className="inline-block px-10 py-4 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
               📧 Plan My Pilgrimage
             </button>
             <button onClick={() => navigate('travel-cab')} className="inline-block px-10 py-4 rounded-full font-bold text-white border-2 border-white/40 hover:bg-white/10 transition-colors">

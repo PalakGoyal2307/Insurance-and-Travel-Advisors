@@ -47,6 +47,7 @@ interface SubmitPayload {
 interface Props {
   kind: InsuranceKind
   planLabel: string
+  variant?: 'modal' | 'page'
   existingDocuments?: ProfileDocumentItem[]
   prefillUser?: {
     fullName: string
@@ -227,6 +228,7 @@ const createPrimaryMemberFromExistingDocuments = (kind: InsuranceKind, documents
 export default function MemberInsuranceModal({
   kind,
   planLabel,
+  variant = 'modal',
   existingDocuments = [],
   prefillUser = null,
   nextProposerSequence = 1,
@@ -461,6 +463,7 @@ export default function MemberInsuranceModal({
   }
 
   const totalMembersLabel = useMemo(() => `Members Added: ${members.length}/${MAX_MEMBERS}`, [members.length])
+  const isPageVariant = variant === 'page'
 
   const renderDocumentActions = (documentId: string) => {
     if (!documentId) return null
@@ -477,9 +480,19 @@ export default function MemberInsuranceModal({
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+    <div
+      className={isPageVariant ? 'pt-20 pb-14 px-4 sm:px-6 lg:px-8' : 'fixed inset-0 z-100 flex items-center justify-center p-4'}
+      onClick={isPageVariant ? undefined : onClose}
+    >
+      {!isPageVariant && <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />}
+      <div
+        className={isPageVariant ? 'max-w-7xl mx-auto bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden' : 'relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto'}
+        onClick={(event) => {
+          if (!isPageVariant) {
+            event.stopPropagation()
+          }
+        }}
+      >
         <div className="p-6 sm:p-8 border-b border-blue-100">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -487,7 +500,9 @@ export default function MemberInsuranceModal({
               <p className="text-gray-500 text-sm mt-1">Selected Plan: {planLabel}</p>
               <p className="text-gray-500 text-sm">{totalMembersLabel}</p>
             </div>
-            <button onClick={onClose} className="rounded-full p-2 text-gray-500 hover:bg-gray-100">✕</button>
+            <button onClick={onClose} className="rounded-full p-2 text-gray-500 hover:bg-gray-100">
+              {isPageVariant ? '←' : '✕'}
+            </button>
           </div>
         </div>
 

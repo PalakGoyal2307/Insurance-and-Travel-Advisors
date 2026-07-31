@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
 import TravelPage from './pages/TravelPage'
+import TravelFormPage from './pages/TravelFormPage'
 import InsurancePage from './pages/InsurancePage'
+import InsuranceFormPage from './pages/InsuranceFormPage'
 import ReligiousTripsPage from './pages/ReligiousTripsPage'
 import CorporateToursPage from './pages/CorporateToursPage'
 import LoginPage from './pages/LoginPage'
@@ -24,10 +26,12 @@ export type PageId =
   | 'travel-flights'
   | 'travel-cab'
   | 'travel-hotels'
+  | 'travel-form'
   | 'insurance'
   | 'insurance-health'
   | 'insurance-life'
   | 'insurance-general'
+  | 'insurance-form'
   | 'religious'
   | 'corporate'
   | 'login'
@@ -46,10 +50,12 @@ const PAGE_PATHS: Record<PageId, string> = {
   'travel-flights': '/travel/flights',
   'travel-cab': '/travel/cab',
   'travel-hotels': '/travel/hotels',
+  'travel-form': '/travel/form',
   insurance: '/insurance',
   'insurance-health': '/insurance/health',
   'insurance-life': '/insurance/life',
   'insurance-general': '/insurance/general',
+  'insurance-form': '/insurance/form',
   religious: '/religious',
   corporate: '/corporate',
   login: '/login',
@@ -183,8 +189,8 @@ export default function App() {
     }
   }
 
-  const isTravelPage = page === 'travel' || page.startsWith('travel-')
-  const isInsurancePage = page === 'insurance' || page.startsWith('insurance-')
+  const isTravelPage = page === 'travel' || (page.startsWith('travel-') && page !== 'travel-form')
+  const isInsurancePage = page === 'insurance' || (page.startsWith('insurance-') && page !== 'insurance-form')
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#EFF6FF' }}>
@@ -201,7 +207,9 @@ export default function App() {
         onLogoutClick={handleLogout}
       />
       {page === 'home' && <HomePage navigate={navigate} openQueryForm={openQueryForm} queryContext={queryContext} setQueryContext={setQueryContext} currentUser={currentUser} />}
+      {page === 'travel-form' && <TravelFormPage navigate={navigate} currentUser={currentUser} />}
       {isTravelPage && <TravelPage page={page} navigate={navigate} openQueryForm={openQueryForm} currentUser={currentUser} />}
+      {page === 'insurance-form' && <InsuranceFormPage navigate={navigate} currentUser={currentUser} />}
       {isInsurancePage && <InsurancePage page={page} navigate={navigate} openQueryForm={openQueryForm} currentUser={currentUser} />}
       {page === 'religious' && <ReligiousTripsPage navigate={navigate} currentUser={currentUser} />}
       {page === 'corporate' && <CorporateToursPage navigate={navigate} currentUser={currentUser} />}

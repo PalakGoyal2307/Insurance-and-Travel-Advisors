@@ -1,26 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import type { PageId } from '../App'
-import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
 import type { AuthUser } from '../utils/authApi'
 
 interface Props {
   navigate: (p: PageId) => void
   currentUser: AuthUser | null
-}
-
-type CorporatePopupType = 'plan-trip' | 'get-quote' | 'proposal'
-
-interface CorporateFormState {
-  companyName: string
-  contactPerson: string
-  phone: string
-  email: string
-  employees: string
-  destination: string
-  travelMonth: string
-  budget: string
-  requirements: string
 }
 
 const corporatePackages = [
@@ -84,217 +69,20 @@ const stats = [
   { num: '15+', label: 'Years Experience' },
 ]
 
-export default function CorporateToursPage({ navigate, currentUser }: Props) {
-  const [popupType, setPopupType] = useState<CorporatePopupType | null>(null)
-  const [selectedService, setSelectedService] = useState('')
-  const [formError, setFormError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formSent, setFormSent] = useState(false)
-  const [form, setForm] = useState<CorporateFormState>({
-    companyName: '',
-    contactPerson: currentUser?.fullName || '',
-    phone: currentUser?.phone || '',
-    email: currentUser?.email || '',
-    employees: '',
-    destination: '',
-    travelMonth: '',
-    budget: '',
-    requirements: '',
-  })
-
-  useEffect(() => {
-    if (!currentUser) return
-    setForm((prev) => ({
-      ...prev,
-      contactPerson: prev.contactPerson || currentUser.fullName,
-      phone: prev.phone || currentUser.phone,
-      email: prev.email || currentUser.email,
-    }))
-  }, [currentUser])
-
-  const openCorporatePopup = (type: CorporatePopupType, service = '') => {
-    setPopupType(type)
-    setSelectedService(service)
-    setFormError('')
-    setFormSent(false)
-    setForm(prev => ({ ...prev, requirements: service && type === 'get-quote' ? `Interested Service: ${service}` : '' }))
-  }
-
-  const closeCorporatePopup = () => {
-    setPopupType(null)
-    setSelectedService('')
-    setFormError('')
-  }
-
-  const popupMeta = popupType === 'plan-trip'
-    ? { title: 'Request Plan Corporate Trips', context: 'corporate:popup:plan-trip', submitLabel: 'Submit Trip Plan Request' }
-    : popupType === 'get-quote'
-      ? { title: 'Get Quote', context: 'corporate:popup:get-quote', submitLabel: 'Submit Quote Request' }
-      : { title: 'Request Corporate Proposal', context: 'corporate:popup:proposal', submitLabel: 'Submit Proposal Request' }
-
-  const updateForm = (field: keyof CorporateFormState, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleCorporateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const companyName = form.companyName.trim()
-    const contactPerson = form.contactPerson.trim()
-    const phone = form.phone.trim()
-    const email = form.email.trim()
-    const employees = form.employees.trim()
-    const destination = form.destination.trim()
-    const travelMonth = form.travelMonth.trim()
-    const budget = form.budget.trim()
-    const requirements = form.requirements.trim()
-
-    if (!popupType) return
-
-    if (!companyName || !contactPerson || !phone || !email) {
-      setFormError('Please fill all required fields.')
-      return
-    }
-
-    if (!/^\+?\d{10,15}$/.test(phone.replace(/\s+/g, ''))) {
-      setFormError('Please enter a valid phone number with 10 to 15 digits.')
-      return
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFormError('Please enter a valid email address.')
-      return
-    }
-
-    setFormError('')
-    setIsSubmitting(true)
-
-    const inquiryType = popupType === 'plan-trip'
-      ? 'Corporate Trip Planning'
-      : popupType === 'get-quote'
-        ? 'Corporate Service Quote'
-        : 'Corporate Proposal Request'
-
-    const subject = `[${inquiryType}] ${companyName} - ${contactPerson}`
-    const fullMessage = [
-      `Inquiry Type: ${inquiryType}`,
-      
-      `Selected Service: ${selectedService || 'N/A'}`,
-      `Company Name: ${companyName}`,
-      `Contact Person: ${contactPerson}`,
-      
-      `Employees: ${employees || 'N/A'}`,
-      `Preferred Destination: ${destination || 'N/A'}`,
-      `Preferred Travel Month: ${travelMonth || 'N/A'}`,
-      `Estimated Budget: ${budget || 'N/A'}`,
-      `Additional Requirements: ${requirements || 'N/A'}`,
-    ].join('\n')
-
-    try {
-      const sentByEmailJs = await sendEmailWithAutoReply({
-        ownerEmail: CONTACT_EMAIL,
-        userEmail: email,
-        userName: contactPerson,
-        ownerSubject: subject,
-        ownerMessage: fullMessage,
-        autoReplySubject: 'Thank you for your corporate travel enquiry - PNP Advisors',
-        autoReplyMessage: buildAutoReplyMessage(contactPerson, fullMessage),
-        ownerTemplateParams: {
-          phone,
-          context: popupMeta.context,
-          inquiry_type: inquiryType,
-          company_name: companyName,
-          selected_service: selectedService || 'N/A',
-          employees: employees || 'N/A',
-          destination: destination || 'N/A',
-          travel_month: travelMonth || 'N/A',
-          budget: budget || 'N/A',
-          requirements: requirements || 'N/A',
-        },
-        autoReplyTemplateParams: {
-          phone,
-          context: popupMeta.context,
-          inquiry_type: inquiryType,
-          company_name: companyName,
-          selected_service: selectedService || 'N/A',
-        },
-      })
-
-      if (!sentByEmailJs) {
-        window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullMessage)}`
+export default function CorporateToursPage({ navigate, currentUser: _currentUser }: Props) {
+  const openTravelForm = useMemo(() => {
+    return (action: string, pkg = '') => {
+      const params = new URLSearchParams({ action })
+      if (pkg) {
+        params.set('pkg', pkg)
       }
-
-      setFormSent(true)
-      setForm({
-        companyName: '',
-        contactPerson: currentUser?.fullName || '',
-        phone: currentUser?.phone || '',
-        email: currentUser?.email || '',
-        employees: '',
-        destination: '',
-        travelMonth: '',
-        budget: '',
-        requirements: '',
-      })
-      setTimeout(() => {
-        closeCorporatePopup()
-      }, 1400)
-    } catch (error) {
-      console.error('Corporate query send failed', error)
-      window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullMessage)}`
-      closeCorporatePopup()
-    } finally {
-      setIsSubmitting(false)
+      const query = params.toString()
+      window.location.href = query ? `/travel/form?${query}` : '/travel/form'
     }
-  }
+  }, [])
 
   return (
     <div className="pt-20">
-      {popupType && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={closeCorporatePopup}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-6 sm:p-8 border-b border-blue-100">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl text-[#0D2B5E] font-bold">{popupMeta.title}</h2>
-                  <p className="text-gray-500 text-sm mt-1">Corporate query form with category-specific details for founder identification.</p>
-                </div>
-                <button onClick={closeCorporatePopup} className="rounded-full p-2 text-gray-500 hover:bg-gray-100">✕</button>
-              </div>
-            </div>
-
-            <form onSubmit={handleCorporateSubmit} className="p-6 sm:p-8 space-y-4">
-              {formSent && <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">Corporate request sent successfully.</div>}
-              {formError && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div>}
-
-              {popupType === 'get-quote' && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-[#0D2B5E]">
-                  Selected Service: <span className="font-bold">{selectedService || 'General Corporate Service'}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input value={form.companyName} onChange={e => updateForm('companyName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Company Name*" required />
-                <input value={form.contactPerson} onChange={e => updateForm('contactPerson', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Contact Person*" required />
-                <input value={form.phone} onChange={e => updateForm('phone', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Phone Number*" required />
-                <input type="email" value={form.email} onChange={e => updateForm('email', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Business Email*" required />
-                <input value={form.employees} onChange={e => updateForm('employees', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Team Size / Employees (Optional)" />
-                <input value={form.destination} onChange={e => updateForm('destination', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Preferred Destination (Optional)" />
-                <input value={form.travelMonth} onChange={e => updateForm('travelMonth', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Travel Month / Dates (Optional)" />
-                <input value={form.budget} onChange={e => updateForm('budget', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Estimated Budget (Optional)" />
-              </div>
-
-              <textarea value={form.requirements} onChange={e => updateForm('requirements', e.target.value)} rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="Additional Requirements" />
-
-              <button type="submit" disabled={isSubmitting} className="w-full py-3.5 rounded-xl font-bold text-white text-sm disabled:opacity-70" style={{ background: 'linear-gradient(135deg, #0D2B5E, #1a4a9e)' }}>
-                {isSubmitting ? 'Sending...' : popupMeta.submitLabel}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Hero */}
       <div className="relative min-h-[28rem] bg-gray-900 overflow-hidden flex items-center">
         <img
@@ -310,7 +98,7 @@ export default function CorporateToursPage({ navigate, currentUser }: Props) {
             From team building retreats to MICE events, annual day celebrations to international incentive tours — PNP Advisors is your trusted corporate travel partner with end-to-end expertise.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button onClick={() => openCorporatePopup('plan-trip')} className="px-8 py-4 rounded-full font-bold text-[#0D2B5E] shadow-xl hover:scale-105 transition-transform" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+            <button onClick={() => openTravelForm('plan-trip')} className="px-8 py-4 rounded-full font-bold text-[#0D2B5E] shadow-xl hover:scale-105 transition-transform" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
               Request Plan Corporate Trips
             </button>
             <a href={`tel:${PHONE_TEL}`} className="px-8 py-4 rounded-full font-bold text-white border-2 border-white/60 hover:bg-white/10 transition-colors">
@@ -362,7 +150,7 @@ export default function CorporateToursPage({ navigate, currentUser }: Props) {
                       </div>
                     ))}
                   </div>
-                  <button onClick={() => openCorporatePopup('get-quote', pkg.title)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #0D2B5E, #1a4a9e)' }}>
+                  <button onClick={() => openTravelForm('get-quote', pkg.title)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #0D2B5E, #1a4a9e)' }}>
                     Get Quote
                   </button>
                 </div>
@@ -410,11 +198,11 @@ export default function CorporateToursPage({ navigate, currentUser }: Props) {
               </div>
             </div>
             <div className="space-y-4">
-              <button onClick={() => openCorporatePopup('proposal')} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
-                📧 Request Corporate Proposal
-              </button>
               <button onClick={() => navigate('travel-cab')} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-colors">
                 🚘 Private Cab Booking
+              </button>
+              <button onClick={() => openTravelForm('proposal')} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+                📧 Request Corporate Proposal
               </button>
               <a href={`tel:${PHONE_TEL}`} className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-colors">
                 📞 Call: {PHONE_NUMBER}
