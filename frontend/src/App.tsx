@@ -209,9 +209,18 @@ export default function App() {
       {page === 'forgot-password' && <ForgotPasswordPage navigate={navigate} />}
       {page === 'reset-password' && <ResetPasswordPage navigate={navigate} />}
       {page === 'register' && <RegisterPage navigate={navigate} onRegisterSuccess={setCurrentUser} />}
-      {page === 'profile' && currentUser?.role !== 'admin' && <ProfilePage navigate={navigate} user={currentUser} onProfileUpdated={setCurrentUser} />}
-      {page === 'profile' && currentUser?.role === 'admin' && <AdminDashboardPage navigate={navigate} />}
-      {page === 'profile' && !currentUser && authReady && <LoginPage navigate={navigate} onLoginSuccess={setCurrentUser} />}
+      {page === 'profile' && !authReady && (
+        <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-blue-100 bg-white p-6 text-sm text-gray-600 shadow-sm">
+            Loading profile...
+          </div>
+        </div>
+      )}
+      {page === 'profile' && authReady && currentUser && currentUser.role !== 'admin' && (
+        <ProfilePage navigate={navigate} user={currentUser} onProfileUpdated={setCurrentUser} />
+      )}
+      {page === 'profile' && authReady && currentUser?.role === 'admin' && <AdminDashboardPage navigate={navigate} />}
+      {page === 'profile' && authReady && !currentUser && <LoginPage navigate={navigate} onLoginSuccess={setCurrentUser} />}
       {page === 'admin-dashboard' && currentUser?.role === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-dashboard' && currentUser?.role !== 'admin' && authReady && <HomePage navigate={navigate} openQueryForm={openQueryForm} queryContext={queryContext} setQueryContext={setQueryContext} currentUser={currentUser} />}
     </div>
