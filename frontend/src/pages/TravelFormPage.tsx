@@ -313,6 +313,7 @@ function getBackPage(action: string): PageId {
 }
 
 export default function TravelFormPage({ navigate, currentUser, authReady }: Props) {
+  const returnTo = useMemo(() => window.location.pathname + window.location.search, [])
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formSent, setFormSent] = useState(false)
@@ -333,7 +334,7 @@ export default function TravelFormPage({ navigate, currentUser, authReady }: Pro
   useEffect(() => {
     if (!authReady) return
     if (!currentUser) {
-      navigate('login')
+      window.location.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`)
       return
     }
 

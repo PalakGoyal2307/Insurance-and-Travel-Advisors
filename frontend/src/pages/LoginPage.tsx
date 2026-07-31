@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { PageId } from '../App'
 import type { AuthUser } from '../utils/authApi'
 import { loginUser } from '../utils/authApi'
@@ -10,6 +10,12 @@ interface Props {
 }
 
 export default function LoginPage({ navigate, onLoginSuccess }: Props) {
+  const returnTo = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    const candidate = params.get('returnTo') || ''
+    if (!candidate.startsWith('/')) return ''
+    return candidate
+  }, [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -24,7 +30,11 @@ export default function LoginPage({ navigate, onLoginSuccess }: Props) {
     try {
       const user = await loginUser({ email: email.trim(), password })
       onLoginSuccess(user)
-      navigate('home')
+      if (returnTo) {
+        window.location.replace(returnTo)
+      } else {
+        navigate('home')
+      }
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message)

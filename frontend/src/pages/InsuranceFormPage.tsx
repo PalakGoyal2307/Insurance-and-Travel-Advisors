@@ -117,6 +117,7 @@ function getBackPage(action: string): PageId {
 }
 
 export default function InsuranceFormPage({ navigate, currentUser, authReady }: Props) {
+  const returnTo = useMemo(() => window.location.pathname + window.location.search, [])
   const query = useMemo(() => new URLSearchParams(window.location.search), [window.location.search])
   const action = query.get('action') || 'health-quote'
   const selectedPlan = query.get('plan') || ''
@@ -143,7 +144,7 @@ export default function InsuranceFormPage({ navigate, currentUser, authReady }: 
   useEffect(() => {
     if (!authReady) return
     if (!currentUser) {
-      navigate('login')
+      window.location.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`)
       return
     }
 
