@@ -71,8 +71,15 @@ function isPageId(value: string): value is PageId {
   return PAGE_IDS.has(value as PageId)
 }
 
+function normalizePathname(pathname: string): string {
+  if (!pathname) return '/'
+  const cleaned = pathname.replace(/\/+$/, '')
+  return cleaned || '/'
+}
+
 function pageFromPath(pathname: string): PageId {
-  return PATH_TO_PAGE[pathname] ?? 'home'
+  const normalizedPath = normalizePathname(pathname)
+  return PATH_TO_PAGE[normalizedPath] ?? 'home'
 }
 
 export default function App() {
