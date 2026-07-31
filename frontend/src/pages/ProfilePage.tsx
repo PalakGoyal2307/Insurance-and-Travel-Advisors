@@ -271,6 +271,7 @@ export default function ProfilePage({ user, onProfileUpdated }: Props) {
           title={`${selectedApplication.moduleName.toUpperCase()} Application Details`}
           application={selectedApplication.application}
           uploadedDocuments={uploadedDocuments}
+          hiddenFields={['id', 'status', 'sourceContext']}
           onClose={() => setSelectedApplication(null)}
         />
       )}

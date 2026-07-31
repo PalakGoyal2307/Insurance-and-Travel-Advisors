@@ -6,6 +6,7 @@ interface Props {
   application: Record<string, unknown>
   uploadedDocuments: ProfileDocumentItem[]
   onClose: () => void
+  hiddenFields?: string[]
 }
 
 const formatDate = (value: unknown) => {
@@ -33,8 +34,9 @@ const getDocumentTitle = (key: string) => {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 
-export default function ApplicationDetailsModal({ title, application, uploadedDocuments, onClose }: Props) {
+export default function ApplicationDetailsModal({ title, application, uploadedDocuments, onClose, hiddenFields = [] }: Props) {
   const documentMap = new Map(uploadedDocuments.map((document) => [document.id, document]))
+  const hiddenFieldSet = new Set(hiddenFields.map((field) => field.toLowerCase()))
 
   const renderDocumentLink = (documentId: string, label: string) => {
     const document = documentMap.get(documentId)
@@ -156,7 +158,7 @@ export default function ApplicationDetailsModal({ title, application, uploadedDo
   }
 
   const topLevelRows = Object.entries(application)
-    .filter(([key, value]) => !['primaryMember', 'additionalMembers'].includes(key) && !Array.isArray(value) && !isRecord(value))
+    .filter(([key, value]) => !['primaryMember', 'additionalMembers'].includes(key) && !hiddenFieldSet.has(key.toLowerCase()) && !Array.isArray(value) && !isRecord(value))
     .map(([key, value]) => (
       <tr key={key} className="border-t border-blue-100">
         <td className="px-4 py-3 font-semibold text-[#0D2B5E]">{getDocumentTitle(key)}</td>
