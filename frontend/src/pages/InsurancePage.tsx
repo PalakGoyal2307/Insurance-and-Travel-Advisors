@@ -29,7 +29,11 @@ function BackBtn({ navigate, to, label }: { navigate: (p: PageId) => void; to: P
   )
 }
 
-function openInsuranceForm(action: string, plan = '') {
+function openInsuranceForm(action: string, plan = '', isAuthenticated = true, navigate?: (p: PageId) => void) {
+  if (!isAuthenticated) {
+    navigate?.('login')
+    return
+  }
   const params = new URLSearchParams({ action })
   if (plan) {
     params.set('plan', plan)
@@ -110,7 +114,7 @@ function InsuranceOverview({ navigate }: { navigate: (p: PageId) => void }) {
   )
 }
 
-function HealthInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
+function HealthInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) => void; currentUser: AuthUser | null }) {
   const plans = [
     { name: 'Care Supreme', for: 'Individual', highlights: ['Unlimited Restoration', 'No Sub-limits', 'Global Cover Add-on', 'OPD Included'] },
     { name: 'Care Family Floater', for: 'Family (4 members)', highlights: ['Entire Family Covered', 'Maternity Benefit', 'Newborn Cover', 'Cashless Pan-India'] },
@@ -132,7 +136,7 @@ function HealthInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
               <ul className="space-y-1.5 mb-5">
                 {plan.highlights.map(h => <li key={h} className="text-gray-600 text-xs flex gap-2"><span className="text-orange-400">✓</span>{h}</li>)}
               </ul>
-              <button onClick={() => openInsuranceForm('health-quote', plan.name)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-xs" style={{ background: 'linear-gradient(135deg, #FF6B00, #FF9A00)' }}>
+              <button onClick={() => openInsuranceForm('health-quote', plan.name, Boolean(currentUser), navigate)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-xs" style={{ background: 'linear-gradient(135deg, #FF6B00, #FF9A00)' }}>
                 Get Quote
               </button>
             </div>
@@ -142,7 +146,7 @@ function HealthInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
         <div className="bg-gradient-to-br from-[#0D2B5E] to-[#0e4f7a] rounded-3xl p-8 text-white text-center">
           <h3 className="font-display text-2xl font-bold mb-3">Need Help Choosing a Health Plan?</h3>
           <p className="text-white/80 mb-5 text-sm max-w-xl mx-auto">Our insurance advisors will recommend the best fit after reviewing your profile and budget.</p>
-          <button onClick={() => openInsuranceForm('health-consultation')} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+          <button onClick={() => openInsuranceForm('health-consultation', '', Boolean(currentUser), navigate)} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
             📧 Free Consultation
           </button>
         </div>
@@ -151,7 +155,7 @@ function HealthInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
   )
 }
 
-function LifeInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
+function LifeInsurancePage({ navigate, currentUser }: { navigate: (p: PageId) => void; currentUser: AuthUser | null }) {
   const plans = [
     { name: 'Jeevan Anand', type: 'Endowment', maturity: '20 years', features: ['Death + Maturity Benefit', 'Bonus Added Yearly', 'Loan Facility', 'Tax Saving u/s 80C'] },
     { name: 'Tech Term', type: 'Term Plan', maturity: 'Till age 75', features: ['Pure Life Cover', 'High Sum Assured', 'Online Purchase', 'Accidental Rider'] },
@@ -174,7 +178,7 @@ function LifeInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
               <ul className="space-y-1.5 mb-5">
                 {plan.features.map(f => <li key={f} className="text-gray-600 text-xs flex gap-2"><span className="text-blue-400">✓</span>{f}</li>)}
               </ul>
-              <button onClick={() => openInsuranceForm('life-quote', plan.name)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-xs" style={{ background: 'linear-gradient(135deg, #003366, #0066CC)' }}>
+              <button onClick={() => openInsuranceForm('life-quote', plan.name, Boolean(currentUser), navigate)} className="block w-full text-center py-3 rounded-xl font-bold text-white text-xs" style={{ background: 'linear-gradient(135deg, #003366, #0066CC)' }}>
                 Get Quote
               </button>
             </div>
@@ -184,7 +188,7 @@ function LifeInsurancePage({ navigate }: { navigate: (p: PageId) => void }) {
         <div className="bg-gradient-to-br from-blue-900 to-[#0D2B5E] rounded-3xl p-8 text-white text-center">
           <h3 className="font-display text-2xl font-bold mb-3">Secure Your Family&apos;s Future Today</h3>
           <p className="text-white/80 mb-5 text-sm max-w-xl mx-auto">Our LIC advisors will help you choose the right policy based on your goals.</p>
-          <button onClick={() => openInsuranceForm('life-consultation')} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+          <button onClick={() => openInsuranceForm('life-consultation', '', Boolean(currentUser), navigate)} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
             📧 Book Free LIC Consultation
           </button>
         </div>
@@ -247,8 +251,8 @@ function GeneralInsurancePage({ navigate, currentUser }: { navigate: (p: PageId)
 }
 
 export default function InsurancePage({ page, navigate, openQueryForm: _openQueryForm, currentUser }: Props) {
-  if (page === 'insurance-health') return <HealthInsurancePage navigate={navigate} />
-  if (page === 'insurance-life') return <LifeInsurancePage navigate={navigate} />
+  if (page === 'insurance-health') return <HealthInsurancePage navigate={navigate} currentUser={currentUser} />
+  if (page === 'insurance-life') return <LifeInsurancePage navigate={navigate} currentUser={currentUser} />
   if (page === 'insurance-general') return <GeneralInsurancePage navigate={navigate} currentUser={currentUser} />
   return <InsuranceOverview navigate={navigate} />
 }

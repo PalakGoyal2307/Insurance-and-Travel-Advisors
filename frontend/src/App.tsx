@@ -207,9 +207,23 @@ export default function App() {
         onLogoutClick={handleLogout}
       />
       {page === 'home' && <HomePage navigate={navigate} openQueryForm={openQueryForm} queryContext={queryContext} setQueryContext={setQueryContext} currentUser={currentUser} />}
-      {page === 'travel-form' && <TravelFormPage navigate={navigate} currentUser={currentUser} />}
+      {page === 'travel-form' && !authReady && (
+        <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-blue-100 bg-white p-6 text-sm text-gray-600 shadow-sm">
+            Loading form...
+          </div>
+        </div>
+      )}
+      {page === 'travel-form' && authReady && <TravelFormPage navigate={navigate} currentUser={currentUser} authReady={authReady} />}
       {isTravelPage && <TravelPage page={page} navigate={navigate} openQueryForm={openQueryForm} currentUser={currentUser} />}
-      {page === 'insurance-form' && <InsuranceFormPage navigate={navigate} currentUser={currentUser} />}
+      {page === 'insurance-form' && !authReady && (
+        <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-blue-100 bg-white p-6 text-sm text-gray-600 shadow-sm">
+            Loading form...
+          </div>
+        </div>
+      )}
+      {page === 'insurance-form' && authReady && <InsuranceFormPage navigate={navigate} currentUser={currentUser} authReady={authReady} />}
       {isInsurancePage && <InsurancePage page={page} navigate={navigate} openQueryForm={openQueryForm} currentUser={currentUser} />}
       {page === 'religious' && <ReligiousTripsPage navigate={navigate} currentUser={currentUser} />}
       {page === 'corporate' && <CorporateToursPage navigate={navigate} currentUser={currentUser} />}

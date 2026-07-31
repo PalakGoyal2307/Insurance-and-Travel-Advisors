@@ -69,9 +69,13 @@ const stats = [
   { num: '15+', label: 'Years Experience' },
 ]
 
-export default function CorporateToursPage({ navigate, currentUser: _currentUser }: Props) {
+export default function CorporateToursPage({ navigate, currentUser }: Props) {
   const openTravelForm = useMemo(() => {
     return (action: string, pkg = '') => {
+      if (!currentUser) {
+        navigate('login')
+        return
+      }
       const params = new URLSearchParams({ action })
       if (pkg) {
         params.set('pkg', pkg)
@@ -79,7 +83,7 @@ export default function CorporateToursPage({ navigate, currentUser: _currentUser
       const query = params.toString()
       window.location.href = query ? `/travel/form?${query}` : '/travel/form'
     }
-  }, [])
+  }, [currentUser, navigate])
 
   return (
     <div className="pt-20">

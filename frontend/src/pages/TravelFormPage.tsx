@@ -7,6 +7,7 @@ import type { AuthUser } from '../utils/authApi'
 interface Props {
   navigate: (p: PageId) => void
   currentUser: AuthUser | null
+  authReady: boolean
 }
 
 interface TravelFormState {
@@ -311,7 +312,7 @@ function getBackPage(action: string): PageId {
   return 'travel'
 }
 
-export default function TravelFormPage({ navigate, currentUser }: Props) {
+export default function TravelFormPage({ navigate, currentUser, authReady }: Props) {
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formSent, setFormSent] = useState(false)
@@ -330,7 +331,12 @@ export default function TravelFormPage({ navigate, currentUser }: Props) {
   })
 
   useEffect(() => {
-    if (!currentUser) return
+    if (!authReady) return
+    if (!currentUser) {
+      navigate('login')
+      return
+    }
+
     setForm((prev) => ({
       ...prev,
       fullName: prev.fullName || currentUser.fullName,
@@ -338,7 +344,7 @@ export default function TravelFormPage({ navigate, currentUser }: Props) {
       email: prev.email || currentUser.email,
       contactPerson: prev.contactPerson || currentUser.fullName,
     }))
-  }, [currentUser])
+  }, [authReady, currentUser, navigate])
 
   const { action, packageName, backPage, config } = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
@@ -355,6 +361,10 @@ export default function TravelFormPage({ navigate, currentUser }: Props) {
   }, [window.location.search])
 
   const selectedPackage = packageName || config.defaultPackage
+
+  if (!authReady || !currentUser) {
+    return null
+  }
 
   const updateForm = (field: keyof TravelFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))

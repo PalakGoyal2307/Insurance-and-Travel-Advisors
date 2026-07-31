@@ -18,6 +18,7 @@ import MemberInsuranceModal from '../components/MemberInsuranceModal'
 interface Props {
   navigate: (p: PageId) => void
   currentUser: AuthUser | null
+  authReady: boolean
 }
 
 interface RequirementItem {
@@ -115,7 +116,7 @@ function getBackPage(action: string): PageId {
   return 'insurance'
 }
 
-export default function InsuranceFormPage({ navigate, currentUser }: Props) {
+export default function InsuranceFormPage({ navigate, currentUser, authReady }: Props) {
   const query = useMemo(() => new URLSearchParams(window.location.search), [window.location.search])
   const action = query.get('action') || 'health-quote'
   const selectedPlan = query.get('plan') || ''
@@ -140,6 +141,7 @@ export default function InsuranceFormPage({ navigate, currentUser }: Props) {
   })
 
   useEffect(() => {
+    if (!authReady) return
     if (!currentUser) {
       navigate('login')
       return
@@ -159,7 +161,7 @@ export default function InsuranceFormPage({ navigate, currentUser }: Props) {
     }
 
     bootstrap()
-  }, [currentUser, navigate])
+  }, [authReady, currentUser, navigate])
 
   useEffect(() => {
     if (!currentUser) return
@@ -459,6 +461,10 @@ export default function InsuranceFormPage({ navigate, currentUser }: Props) {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!authReady || !currentUser) {
+    return null
   }
 
   if (action.startsWith('health-')) {
