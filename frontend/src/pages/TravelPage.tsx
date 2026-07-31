@@ -439,13 +439,8 @@ function HotelsPage({ navigate, openTravelForm }: { navigate: (p: PageId) => voi
 }
 
 export default function TravelPage({ page, navigate, openQueryForm, currentUser: _currentUser }: Props) {
-  const currentUser = _currentUser
   const openTravelForm = useMemo(() => {
     return (action: string, pkg = '') => {
-      if (!currentUser) {
-        navigate('login')
-        return
-      }
       const params = new URLSearchParams({ action })
       if (pkg) {
         params.set('pkg', pkg)
@@ -453,7 +448,7 @@ export default function TravelPage({ page, navigate, openQueryForm, currentUser:
       const query = params.toString()
       window.location.href = query ? `/travel/form?${query}` : '/travel/form'
     }
-  }, [currentUser, navigate])
+  }, [])
 
   if (page === 'travel-international') return (
     <InternationalPage navigate={navigate} openTravelForm={openTravelForm} />

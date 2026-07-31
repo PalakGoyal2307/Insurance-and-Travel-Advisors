@@ -332,11 +332,7 @@ export default function TravelFormPage({ navigate, currentUser, authReady }: Pro
   })
 
   useEffect(() => {
-    if (!authReady) return
-    if (!currentUser) {
-      window.location.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`)
-      return
-    }
+    if (!currentUser) return
 
     setForm((prev) => ({
       ...prev,
@@ -362,10 +358,6 @@ export default function TravelFormPage({ navigate, currentUser, authReady }: Pro
   }, [window.location.search])
 
   const selectedPackage = packageName || config.defaultPackage
-
-  if (!authReady || !currentUser) {
-    return null
-  }
 
   const updateForm = (field: keyof TravelFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
