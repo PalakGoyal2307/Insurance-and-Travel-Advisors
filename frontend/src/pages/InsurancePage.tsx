@@ -30,16 +30,23 @@ function BackBtn({ navigate, to, label }: { navigate: (p: PageId) => void; to: P
 }
 
 function openInsuranceForm(action: string, plan = '', isAuthenticated = true, navigate?: (p: PageId) => void) {
-  if (!isAuthenticated) {
-    navigate?.('login')
-    return
-  }
   const params = new URLSearchParams({ action })
   if (plan) {
     params.set('plan', plan)
   }
   const query = params.toString()
-  window.location.href = query ? `/insurance/form?${query}` : '/insurance/form'
+  const formUrl = query ? `/insurance/form?${query}` : '/insurance/form'
+
+  if (!isAuthenticated) {
+    window.location.replace(`/login?returnTo=${encodeURIComponent(formUrl)}`)
+    return
+  }
+  if (navigate) {
+    window.location.href = formUrl
+    return
+  }
+
+  window.location.href = formUrl
 }
 
 function InsuranceOverview({ navigate }: { navigate: (p: PageId) => void }) {
@@ -220,11 +227,7 @@ function GeneralInsurancePage({ navigate, currentUser }: { navigate: (p: PageId)
               <h3 className="font-display text-[#0D2B5E] text-lg font-bold mb-2">{plan.name}</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">{plan.desc}</p>
               <button onClick={() => {
-                if (!currentUser) {
-                  navigate('login')
-                  return
-                }
-                openInsuranceForm('general-enquiry', plan.name)
+                openInsuranceForm('general-enquiry', plan.name, Boolean(currentUser), navigate)
               }} className="block w-full text-center py-3 rounded-xl font-bold text-white text-xs" style={{ background: `linear-gradient(135deg, ${plan.color}, #00897B)` }}>
                 Enquire Now
               </button>
@@ -235,13 +238,7 @@ function GeneralInsurancePage({ navigate, currentUser }: { navigate: (p: PageId)
         <div className="bg-gradient-to-br from-teal-900 to-[#005555] rounded-3xl p-8 text-white text-center">
           <h3 className="font-display text-2xl font-bold mb-3">Get the Best Tata AIG Plan for You</h3>
           <p className="text-white/80 mb-5 text-sm max-w-xl mx-auto">We will assess your assets and business risk profile for better coverage decisions.</p>
-          <button onClick={() => {
-            if (!currentUser) {
-              navigate('login')
-              return
-            }
-            openInsuranceForm('general-audit')
-          }} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
+          <button onClick={() => openInsuranceForm('general-audit', '', Boolean(currentUser), navigate)} className="inline-block px-8 py-3.5 rounded-full font-bold text-[#0D2B5E] shadow-xl transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #F47B20, #F0C060)' }}>
             📧 Free Insurance Audit
           </button>
         </div>
