@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { PageId } from '../App'
-import { PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
+import { CONTACT_EMAIL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
 import type { AuthUser } from '../utils/authApi'
+import { localPhoto } from '../assets/localPhoto'
 
 interface Props {
   page: PageId
@@ -36,14 +37,14 @@ function BackBtn({ navigate, to, label }: { navigate: (p: PageId) => void; to: P
 
 function TravelOverview({ navigate, openQueryForm, openTravelForm }: { navigate: (p: PageId) => void; openQueryForm?: (context?: string) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const services = [
-    { id: 'travel-international' as PageId, icon: '🌍', title: 'International Tour Packages', desc: 'Europe, Asia, America, Australia & beyond. Fully customised group and private tours with expert guides, luxury stays, and seamless logistics handled end-to-end by our team.', img: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=600&h=400&fit=crop&auto=format', highlights: ['Visa Assistance', 'Guided Tours', '4★/5★ Hotels', 'Travel Insurance'] },
-    { id: 'travel-domestic' as PageId, icon: '🇮🇳', title: 'Domestic Tour Packages', desc: "Explore incredible India from Goa's golden beaches to Kashmir's snow-capped peaks. Our domestic packages cover every corner of India with comfort and care.", img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&h=400&fit=crop&auto=format', highlights: ['All-India Coverage', 'Budget to Luxury', 'Local Guides', 'Flexible Itineraries'] },
-    { id: 'travel-honeymoon' as PageId, icon: '💑', title: 'Honeymoon Packages', desc: 'Begin your forever beautifully. We craft personalised romantic getaways to destinations like Maldives, Bali, Paris, Kerala, and Switzerland with special surprises curated for newlyweds.', img: 'https://images.unsplash.com/photo-1701401942416-bea590efe2ad?w=600&h=400&fit=crop&auto=format', highlights: ['Romantic Setups', 'Candlelight Dinners', 'Couple Spa', 'Honeymoon Suites'] },
-    { id: 'travel-flights' as PageId, icon: '✈️', title: 'Flight / Train / Bus Ticket Booking', desc: 'Instant ticket booking for flights, trains, and buses across India and internationally. We find the best fares, handle seat preferences, and ensure smooth transitions between your travel legs.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY0WtGmB7Msf_AiiZRKqkelfqLHkucPNdm3-FKhwiLjQ&s=10', highlights: ['Best Fare Guarantee', 'All Airlines', 'Train & Bus Tickets', 'Instant Confirmation'] },
-    { id: 'travel-cab' as PageId, icon: '🚘', title: 'Private Cab Booking', desc: 'Book airport pickups, local city rides, outstation cabs, and hourly rentals with trusted drivers and comfortable vehicles.', img: 'https://cdn.vectorstock.com/i/500p/97/88/taxi-car-illustration-vector-1699788.jpg', highlights: ['Airport Transfers', 'Outstation Trips', 'Hourly Rentals', 'AC Cars & SUVs'] },
-    { id: 'travel-hotels' as PageId, icon: '🏨', title: 'Hotel & Villa Reservations', desc: "From cozy budget stays to ultra-luxury 5-star resorts and private villas — we curate accommodations that match your taste, budget, and destination perfectly.", img: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?w=600&h=400&fit=crop&auto=format', highlights: ['Exclusive Deals', 'Early Check-in', 'Room Upgrades', 'All Categories'] },
-    { id: 'religious' as PageId, icon: '🕌', title: 'Religious & Spiritual Trips', desc: 'Sacred pilgrimages, temple tours, and spiritual journeys with VIP arrangements and care.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzAyoGU5WrVrhOICQHFTtAr6XHRIq6XCY0ukEKh2uO-w&s=10', highlights: ['VIP Darshan', 'Senior Support', 'Comfort Stays', 'Spiritual Guidance'] },
-    { id: 'corporate' as PageId, icon: '💼', title: 'Corporate Tours', desc: 'Team outings, incentive tours, and MICE events with end-to-end professional management.', img: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=400&fit=crop&auto=format', highlights: ['Team Retreats', 'Incentive Trips', 'MICE Events', 'Dedicated Support'] },
+    { id: 'travel-international' as PageId, icon: '🌍', title: 'International Tour Packages', desc: 'Europe, Asia, America, Australia & beyond. Fully customised group and private tours with expert guides, luxury stays, and seamless logistics handled end-to-end by our team.', img: localPhoto("travel-international.avif"), highlights: ['Visa Assistance', 'Guided Tours', '4★/5★ Hotels', 'Travel Insurance'] },
+    { id: 'travel-domestic' as PageId, icon: '🇮🇳', title: 'Domestic Tour Packages', desc: "Explore incredible India from Goa's golden beaches to Kashmir's snow-capped peaks. Our domestic packages cover every corner of India with comfort and care.", img: localPhoto("travel-domestic.avif"), highlights: ['All-India Coverage', 'Budget to Luxury', 'Local Guides', 'Flexible Itineraries'] },
+    { id: 'travel-honeymoon' as PageId, icon: '💑', title: 'Honeymoon Packages', desc: 'Begin your forever beautifully. We craft personalised romantic getaways to destinations like Maldives, Bali, Paris, Kerala, and Switzerland with special surprises curated for newlyweds.', img: localPhoto("Honeymoon Packages.avif"), highlights: ['Romantic Setups', 'Candlelight Dinners', 'Couple Spa', 'Honeymoon Suites'] },
+    { id: 'travel-flights' as PageId, icon: '✈️', title: 'Flight / Train / Bus Ticket Booking', desc: 'Instant ticket booking for flights, trains, and buses across India and internationally. We find the best fares, handle seat preferences, and ensure smooth transitions between your travel legs.', img: localPhoto("Seamless ticket bookings for all modes of travel.webp"), highlights: ['Best Fare Guarantee', 'All Airlines', 'Train & Bus Tickets', 'Instant Confirmation'] },
+    { id: 'travel-cab' as PageId, icon: '🚘', title: 'Private Cab Booking', desc: 'Book airport pickups, local city rides, outstation cabs, and hourly rentals with trusted drivers and comfortable vehicles.', img: localPhoto("Private Cab Booking.avif"), highlights: ['Airport Transfers', 'Outstation Trips', 'Hourly Rentals', 'AC Cars & SUVs'] },
+    { id: 'travel-hotels' as PageId, icon: '🏨', title: 'Hotel & Villa Reservations', desc: "From cozy budget stays to ultra-luxury 5-star resorts and private villas — we curate accommodations that match your taste, budget, and destination perfectly.", img: localPhoto("Hotel & Villa Reservations.avif"), highlights: ['Exclusive Deals', 'Early Check-in', 'Room Upgrades', 'All Categories'] },
+    { id: 'religious' as PageId, icon: '🕌', title: 'Religious & Spiritual Trips', desc: 'Sacred pilgrimages, temple tours, and spiritual journeys with VIP arrangements and care.', img: localPhoto("religious.jpeg"), highlights: ['VIP Darshan', 'Senior Support', 'Comfort Stays', 'Spiritual Guidance'] },
+    { id: 'corporate' as PageId, icon: '💼', title: 'Corporate Tours', desc: 'Team outings, incentive tours, and MICE events with end-to-end professional management.', img: localPhoto("corporate.avif"), highlights: ['Team Retreats', 'Incentive Trips', 'MICE Events', 'Dedicated Support'] },
   ]
 
   return (
@@ -51,7 +52,7 @@ function TravelOverview({ navigate, openQueryForm, openTravelForm }: { navigate:
       <PageHero
         title="Travel Solutions"
         subtitle="Your complete travel partner — from flights to hotels, domestic to international, budget to luxury"
-        img="https://images.unsplash.com/photo-1504814532849-cff240bbc503?w=1400&h=600&fit=crop&auto=format"
+        img={localPhoto('Travel Solutions.avif')}
         emoji="✈️"
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -128,17 +129,17 @@ function TravelOverview({ navigate, openQueryForm, openTravelForm }: { navigate:
 
 function InternationalPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const packages = [
-    { name: 'Europe Splendour', countries: 'France · Italy · Switzerland', img: 'https://images.unsplash.com/photo-1431274172761-fca41d930114?w=600&h=400&fit=crop&auto=format', badge: '🔥 Most Popular' },
-    { name: 'Maldives Escape', countries: 'Maldives', img: 'https://images.unsplash.com/photo-1603477849227-705c424d1d80?w=600&h=400&fit=crop&auto=format', badge: '💑 Best for Honeymoon' },
-    { name: 'Dubai Extravaganza', countries: 'UAE', img: 'https://images.unsplash.com/flagged/photo-1559717201-fbb671ff56b7?w=600&h=400&fit=crop&auto=format', badge: '⭐ Premium' },
-    { name: 'South East Asia', countries: 'Thailand · Singapore · Bali', img: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=600&h=400&fit=crop&auto=format', badge: '🎯 Value Deal' },
-    { name: 'Japan Discovery', countries: 'Japan', img: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=600&h=400&fit=crop&auto=format', badge: '✨ Cultural Experience' },
-    { name: 'Switzerland Alps', countries: 'Switzerland', img: 'https://images.unsplash.com/photo-1586752488885-6ce47fdfd874?w=600&h=400&fit=crop&auto=format', badge: '❄️ Winter Special' },
+    { name: 'Europe Splendour', countries: 'France · Italy · Switzerland', img: localPhoto("Europe Splendour.avif"), badge: '🔥 Most Popular' },
+    { name: 'Maldives Escape', countries: 'Maldives', img: localPhoto("Maldives Escape.avif"), badge: '💑 Best for Honeymoon' },
+    { name: 'Dubai Extravaganza', countries: 'UAE', img: localPhoto("Dubai Extravaganza.avif"), badge: '⭐ Premium' },
+    { name: 'South East Asia', countries: 'Thailand · Singapore · Bali', img: localPhoto("South East Asia.avif"), badge: '🎯 Value Deal' },
+    { name: 'Japan Discovery', countries: 'Japan', img: localPhoto("Japan Discovery.avif"), badge: '✨ Cultural Experience' },
+    { name: 'Switzerland Alps', countries: 'Switzerland', img: localPhoto("Switzerland Alps.avif"), badge: '❄️ Winter Special' },
   ]
 
   return (
     <div className="pt-20">
-      <PageHero title="International Tours" subtitle="Explore the world with expert guidance and curated experiences" img="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1400&h=600&fit=crop&auto=format" emoji="🌍" />
+      <PageHero title="International Tours" subtitle="Explore the world with expert guidance and curated experiences" img={localPhoto('International Tours.avif')} emoji="🌍" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-10">
@@ -184,17 +185,17 @@ function InternationalPage({ navigate, openTravelForm }: { navigate: (p: PageId)
 
 function DomesticPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const packages = [
-    { name: 'Kerala Backwaters', region: 'South India', img: 'https://images.unsplash.com/photo-1506461883276-594a12b11cf3?w=600&h=400&fit=crop&auto=format', badge: '🌿 Nature' },
-    { name: 'Rajasthan Royal', region: 'West India', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3tdq7kq3ZDiEABVnMdWKKCXW7XRZVa7L9favjMRhy6g&s=10', badge: '👑 Heritage' },
-    { name: 'Goa Beach Getaway', region: 'West India', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&h=400&fit=crop&auto=format', badge: '🏖️ Beach Fun' },
-    { name: 'Manali Adventure', region: 'North India', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&auto=format', badge: '⛷️ Adventure' },
-    { name: 'Golden Triangle', region: 'North India', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&h=400&fit=crop&auto=format', badge: '🏛️ Iconic' },
-    { name: 'Andaman Islands', region: 'Islands', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9tK8VOxSHXb6FAq0V4HDTSBnCIMGsnYVrnIwvI5O11A&s=10', badge: '🐠 Exotic' },
+    { name: 'Kerala Backwaters', region: 'South India', img: localPhoto("Kerala Backwaters.avif"), badge: '🌿 Nature' },
+    { name: 'Rajasthan Royal', region: 'West India', img: localPhoto("Rajasthan Royal.jpeg"), badge: '👑 Heritage' },
+    { name: 'Goa Beach Getaway', region: 'West India', img: localPhoto("Goa Beach Getaway.avif"), badge: '🏖️ Beach Fun' },
+    { name: 'Manali Adventure', region: 'North India', img: localPhoto("Manali Adventure.avif"), badge: '⛷️ Adventure' },
+    { name: 'Golden Triangle', region: 'North India', img: localPhoto("Golden Triangle.avif"), badge: '🏛️ Iconic' },
+    { name: 'Andaman Islands', region: 'Islands', img: localPhoto("Andaman Islands.jpeg"), badge: '🐠 Exotic' },
   ]
 
   return (
     <div className="pt-20">
-      <PageHero title="Domestic Tours" subtitle="Explore the incredible diversity of Incredible India" img="https://images.unsplash.com/photo-1548013146-72479768bada?w=1400&h=600&fit=crop&auto=format" emoji="🇮🇳" />
+      <PageHero title="Domestic Tours" subtitle="Explore the incredible diversity of Incredible India" img={localPhoto('Domestic Tours.avif')} emoji="🇮🇳" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-10">
@@ -240,17 +241,17 @@ function DomesticPage({ navigate, openTravelForm }: { navigate: (p: PageId) => v
 
 function HoneymoonPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const packages = [
-    { name: 'Maldives Bliss', for: 'couple', img: 'https://images.unsplash.com/photo-1603477849227-705c424d1d80?w=600&h=400&fit=crop&auto=format', features: ['Overwater Bungalow', 'Sunset Cruise', 'Couple Spa', 'Candlelight Dinner'] },
-    { name: 'Bali Romance', for: 'couple', img: 'https://images.unsplash.com/photo-1532186651327-6ac23687d189?w=600&h=400&fit=crop&auto=format', features: ['Private Villa Pool', 'Temple Tour', 'Rice Terrace Walk', 'Balinese Massage'] },
-    { name: 'Paris in Love', for: 'couple', img: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=600&h=400&fit=crop&auto=format', features: ['Eiffel Tower Night', 'Seine River Cruise', 'Wine & Cheese Tour', 'Champs-Élysées'] },
-    { name: 'Kerala Enchant', for: 'couple', img: 'https://images.unsplash.com/photo-1661174607003-d9d36388c916?w=600&h=400&fit=crop&auto=format', features: ['Houseboat Stay', 'Ayurvedic Spa', 'Tea Garden Walk', 'Beach Sunset'] },
-    { name: 'Swiss Alps Escape', for: 'couple', img: 'https://images.unsplash.com/photo-1526925528837-813a7961f5c7?w=600&h=400&fit=crop&auto=format', features: ['Mountain Cable Car', 'Chocolate Factory', 'Lake Geneva Cruise', 'Ski Adventure'] },
-    { name: 'Shimla-Manali Duo', for: 'couple', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=400&fit=crop&auto=format', features: ['Snow Play', 'Rohtang Pass', 'Romantic Bonfire', 'Solang Valley'] },
+    { name: 'Maldives Bliss', for: 'couple', img: localPhoto("Maldives Bliss.avif"), features: ['Overwater Bungalow', 'Sunset Cruise', 'Couple Spa', 'Candlelight Dinner'] },
+    { name: 'Bali Romance', for: 'couple', img: localPhoto("Bali Romance.avif"), features: ['Private Villa Pool', 'Temple Tour', 'Rice Terrace Walk', 'Balinese Massage'] },
+    { name: 'Paris in Love', for: 'couple', img: localPhoto("Paris in Love.jpeg"), features: ['Eiffel Tower Night', 'Seine River Cruise', 'Wine & Cheese Tour', 'Champs-Élysées'] },
+    { name: 'Kerala Enchant', for: 'couple', img: localPhoto("Kerala Enchant.avif"), features: ['Houseboat Stay', 'Ayurvedic Spa', 'Tea Garden Walk', 'Beach Sunset'] },
+    { name: 'Swiss Alps Escape', for: 'couple', img: localPhoto("Swiss Alps Escape.avif"), features: ['Mountain Cable Car', 'Chocolate Factory', 'Lake Geneva Cruise', 'Ski Adventure'] },
+    { name: 'Shimla-Manali Duo', for: 'couple', img: localPhoto("Shimla-Manali Duo.avif"), features: ['Snow Play', 'Rohtang Pass', 'Romantic Bonfire', 'Solang Valley'] },
   ]
 
   return (
     <div className="pt-20">
-      <PageHero title="Honeymoon Packages" subtitle="Begin forever beautifully — romantic getaways curated with love" img="https://images.unsplash.com/photo-1575388104683-e076ee9ccaa0?w=1400&h=600&fit=crop&auto=format" emoji="💑" />
+      <PageHero title="Honeymoon Packages" subtitle="Begin forever beautifully — romantic getaways curated with love" img={localPhoto('Honeymoon Packages.avif')} emoji="💑" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-10 max-w-3xl">
@@ -290,7 +291,7 @@ function HoneymoonPage({ navigate, openTravelForm }: { navigate: (p: PageId) => 
 function FlightsPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   return (
     <div className="pt-20">
-      <PageHero title="Flight / Train / Bus Ticket Booking" subtitle="Seamless ticket bookings for all modes of travel" img="https://thumbs.dreamstime.com/b/transportation-concept-hand-drawing-bus-ship-airplane-chalkboard-background-89662058.jpg" emoji="✈️" />
+      <PageHero title="Flight / Train / Bus Ticket Booking" subtitle="Seamless ticket bookings for all modes of travel" img={localPhoto('Seamless ticket bookings for all modes of travel.webp')} emoji="✈️" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-12 max-w-3xl">
@@ -304,9 +305,9 @@ function FlightsPage({ navigate, openTravelForm }: { navigate: (p: PageId) => vo
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {[
-            { icon: '✈️', type: 'Flight Bookings', color: '#0D2B5E', img: 'https://img.magnific.com/premium-vector/plane-airplane-aircraft-express-shipping-international-transport-transport-concept-sky-background_992252-1571.jpg?semt=ais_hybrid&w=740&q=80', points: ['Domestic & International', 'All Major Airlines', 'Best Fare Guarantee', 'Group Bookings', 'Business & Economy Class', 'Multi-city Itineraries'] },
-            { icon: '🚂', type: 'Train Bookings', color: '#0e4f7a', img: 'https://static.vecteezy.com/system/resources/previews/022/179/277/non_2x/modern-high-speed-train-with-nature-landscape-flat-illustration-free-vector.jpg', points: ['IRCTC Tatkal & Regular', 'AC First to Sleeper', 'Pantry Car Arrangements', 'Group Train Bookings', 'Tourist Quota Access', 'Pan-India Coverage'] },
-            { icon: '🚌', type: 'Bus Bookings', color: '#0D2B5E', img: 'https://cdn.vectorstock.com/i/1000v/33/83/side-view-of-modern-bus-vector-24033383.jpg', points: ['Volvo & AC Sleepers', 'Seat Selection', 'Night Buses', 'Hill Station Routes', 'State & Private Buses', 'Real-Time Tracking'] },
+            { icon: '✈️', type: 'Flight Bookings', color: '#0D2B5E', img: localPhoto("Flight Bookings.avif"), points: ['Domestic & International', 'All Major Airlines', 'Best Fare Guarantee', 'Group Bookings', 'Business & Economy Class', 'Multi-city Itineraries'] },
+            { icon: '🚂', type: 'Train Bookings', color: '#0e4f7a', img: localPhoto("Train Bookings.jpg"), points: ['IRCTC Tatkal & Regular', 'AC First to Sleeper', 'Pantry Car Arrangements', 'Group Train Bookings', 'Tourist Quota Access', 'Pan-India Coverage'] },
+            { icon: '🚌', type: 'Bus Bookings', color: '#0D2B5E', img: localPhoto("Bus Bookings.avif"), points: ['Volvo & AC Sleepers', 'Seat Selection', 'Night Buses', 'Hill Station Routes', 'State & Private Buses', 'Real-Time Tracking'] },
           ].map(item => (
             <div key={item.type} className="card-hover bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
               <div className="h-40 overflow-hidden bg-gray-200">
@@ -335,14 +336,14 @@ function FlightsPage({ navigate, openTravelForm }: { navigate: (p: PageId) => vo
 
 function PrivateCabPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const cabServices = [
-    { icon: '✈️', type: 'Airport Transfers', color: '#0D2B5E', img: 'https://img.magnific.com/free-vector/woman-with-bags-sits-passenger-seat-taxi-flat-vector-illustration_1284-67340.jpg?semt=ais_hybrid&w=740&q=80', points: ['Pickup & Drop', 'Flight Tracking Support', 'Meet & Greet', 'Sedan / SUV Options', '24x7 Availability', 'Professional Drivers'] },
-    { icon: '🚗', type: 'Outstation Cabs', color: '#0e4f7a', img: 'https://cdn.vectorstock.com/i/500p/97/88/taxi-car-illustration-vector-1699788.jpg', points: ['One Way & Round Trip', 'Multi-Day Rentals', 'Flexible Stops', 'AC Cars & SUVs', 'Transparent Pricing', 'Experienced Drivers'] },
-    { icon: '⏱️', type: 'Hourly Rentals', color: '#0D2B5E', img: 'https://cdni.iconscout.com/illustration/premium/thumb/empresario-llamando-a-un-taxi-para-el-aeropuerto-illustration-svg-download-png-3239811.png', points: ['City Travel', 'Business Meetings', 'Shopping Trips', 'Multiple Destinations', 'Wait & Return', 'Hourly Packages'] },
+    { icon: '✈️', type: 'Airport Transfers', color: '#0D2B5E', img: localPhoto("Airport Transfers.avif"), points: ['Pickup & Drop', 'Flight Tracking Support', 'Meet & Greet', 'Sedan / SUV Options', '24x7 Availability', 'Professional Drivers'] },
+    { icon: '🚗', type: 'Outstation Cabs', color: '#0e4f7a', img: localPhoto("Outstation Cabs.avif"), points: ['One Way & Round Trip', 'Multi-Day Rentals', 'Flexible Stops', 'AC Cars & SUVs', 'Transparent Pricing', 'Experienced Drivers'] },
+    { icon: '⏱️', type: 'Hourly Rentals', color: '#0D2B5E', img: localPhoto("Hourly Rentals.png"), points: ['City Travel', 'Business Meetings', 'Shopping Trips', 'Multiple Destinations', 'Wait & Return', 'Hourly Packages'] },
   ]
 
   return (
     <div className="pt-20">
-      <PageHero title="Private Cab Booking" subtitle="Book comfortable city rides, airport transfers, and outstation cabs" img="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1400&h=600&fit=crop&auto=format" emoji="🚘" />
+      <PageHero title="Private Cab Booking" subtitle="Book comfortable city rides, airport transfers, and outstation cabs" img={localPhoto('Private Cab Booking.avif')} emoji="🚘" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-12 max-w-3xl">
@@ -387,15 +388,15 @@ function PrivateCabPage({ navigate, openTravelForm }: { navigate: (p: PageId) =>
 
 function HotelsPage({ navigate, openTravelForm }: { navigate: (p: PageId) => void; openTravelForm: (action: string, pkg?: string) => void }) {
   const hotels = [
-    { name: 'Luxury 5-Star Resorts', desc: 'Premium properties worldwide — Oberoi, Taj, ITC, Marriott, Hilton & more. Exclusive corporate rates and early check-in guaranteed.', icon: '⭐⭐⭐⭐⭐', img: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?w=600&h=400&fit=crop&auto=format' },
-    { name: 'Boutique & Heritage Hotels', desc: 'Discover handpicked boutique properties, palace hotels in Rajasthan, heritage havelis, and eco-resorts for a unique stay experience.', icon: '🏰', img: 'https://images.unsplash.com/photo-1669123547602-b85454d7ee84?w=600&h=400&fit=crop&auto=format' },
-    { name: 'Private Villas', desc: 'Exclusive private villas in Bali, Maldives, Goa & Kerala with private pools, personal butler service, and complete privacy.', icon: '🏡', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&h=400&fit=crop&auto=format' },
-    { name: 'Budget & Mid-Range Stays', desc: 'Comfortable, clean, and well-located hotels for budget-conscious travellers without compromising on quality or experience.', icon: '🏨', img: 'https://images.unsplash.com/photo-1603477849227-705c424d1d80?w=600&h=400&fit=crop&auto=format' },
+    { name: 'Luxury 5-Star Resorts', desc: 'Premium properties worldwide — Oberoi, Taj, ITC, Marriott, Hilton & more. Exclusive corporate rates and early check-in guaranteed.', icon: '⭐⭐⭐⭐⭐', img: localPhoto("Luxury 5-Star Resorts.avif") },
+    { name: 'Boutique & Heritage Hotels', desc: 'Discover handpicked boutique properties, palace hotels in Rajasthan, heritage havelis, and eco-resorts for a unique stay experience.', icon: '🏰', img: localPhoto("Boutique & Heritage Hotels.avif") },
+    { name: 'Private Villas', desc: 'Exclusive private villas in Bali, Maldives, Goa & Kerala with private pools, personal butler service, and complete privacy.', icon: '🏡', img: localPhoto("Private Villas.avif") },
+    { name: 'Budget & Mid-Range Stays', desc: 'Comfortable, clean, and well-located hotels for budget-conscious travellers without compromising on quality or experience.', icon: '🏨', img: localPhoto("Budget & Mid-Range Stays.avif") },
   ]
 
   return (
     <div className="pt-20">
-      <PageHero title="Hotel & Villa Reservations" subtitle="From budget comfort to ultra-luxury — we find your perfect stay" img="https://images.unsplash.com/photo-1551918120-9739cb430c6d?w=1400&h=600&fit=crop&auto=format" emoji="🏨" />
+      <PageHero title="Hotel & Villa Reservations" subtitle="From budget comfort to ultra-luxury — we find your perfect stay" img={localPhoto('Hotel & Villa Reservations.avif')} emoji="🏨" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <BackBtn navigate={navigate} to="travel" label="All Travel Solutions" />
         <div className="mb-12 max-w-3xl">

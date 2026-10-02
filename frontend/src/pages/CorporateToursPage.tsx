@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { PageId } from '../App'
 import { CONTACT_EMAIL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
 import type { AuthUser } from '../utils/authApi'
+import { localPhoto } from '../assets/localPhoto'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -14,52 +15,52 @@ const corporatePackages = [
     title: 'Team Building Retreats',
     desc: 'Carefully designed team outings to destinations like Coorg, Lonavala, Goa & Manali. Activities include adventure sports, workshops, bonfire nights, and collaborative challenges that strengthen bonds.',
     features: ['Adventure Activities', 'Group Workshops', 'Leadership Games', 'Bonfire & Entertainment', 'Team Meals', 'Photography & Memories'],
-    img: 'https://images.unsplash.com/photo-1561489413-985b06da5bee?w=700&h=500&fit=crop&auto=format',
+    img: localPhoto("Team Building Retreats.avif"),
   },
   {
     icon: '🎯',
     title: 'Incentive Tours',
     desc: 'Reward your top performers with luxurious international or domestic incentive trips. Destinations like Bali, Maldives, Singapore, Thailand & Europe are popular choices that motivate and inspire.',
     features: ['Luxury 5★ Stays', 'Custom Trophies', 'Gala Dinner', 'International Destinations', 'Personalized Experiences', 'Event Photography'],
-    img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=700&h=500&fit=crop&auto=format',
+    img: localPhoto("Incentive Tours.avif"),
   },
   {
     icon: '🎪',
     title: 'MICE Events',
     desc: 'Full-service Meetings, Incentives, Conferences & Exhibitions management. From venue sourcing and A/V setup to delegate management and post-event tours — we handle it all.',
     features: ['Venue Sourcing', 'A/V & Stage Setup', 'Delegate Management', 'Airport Transfers', 'Conference Materials', 'Post-Event Tours'],
-    img: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=700&h=500&fit=crop&auto=format',
+    img: localPhoto("MICE Events.avif"),
   },
   {
     icon: '✈️',
     title: 'International Corporate Retreats',
     desc: 'Multi-day international retreats combining business sessions with leisure. Popular destinations include Singapore, Dubai, Thailand, Switzerland, and Southeast Asia.',
     features: ['Business + Leisure Mix', 'Conference Rooms', 'Cultural Experiences', 'Group Flight Bookings', 'Visa Coordination', 'Local Business Tours'],
-    img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=700&h=500&fit=crop&auto=format',
+    img: localPhoto("International Corporate Retreats.avif"),
   },
   {
     icon: '🚌',
     title: 'Office Picnic & Day Trips',
     desc: 'One-day and weekend office picnics to nearby destinations. We arrange transportation, meals, activities, and entertainment for groups of 20 to 2,000+.',
     features: ['A/C Transport', 'Meals & Snacks', 'Fun Activities', 'DJ & Entertainment', 'Group Insurance', 'Flexible Dates'],
-    img: 'https://images.unsplash.com/photo-1504814532849-cff240bbc503?w=700&h=500&fit=crop&auto=format',
+    img: localPhoto("Office Picnic & Day Trips.avif"),
   },
   {
     icon: '🏢',
     title: 'Annual Day Events',
     desc: 'Make your company\'s annual day truly memorable. We manage venue, stage, décor, entertainment, awards ceremonies, and group dinners at premium hotel banquets.',
     features: ['Premium Venue', 'Stage & Décor', 'Awards Ceremony', 'Entertainment Show', 'Group Dinner', 'Event Photography'],
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI3SNlrZ2HdnDQyohw654xQOf_5WwyE7_3JESVCzUc7A&s=10',
+    img: localPhoto("Annual Day Events.jpeg"),
   },
 ]
 
 const destinations = [
-  { name: 'Goa', type: 'Domestic', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&h=280&fit=crop&auto=format', tag: '🏖️ Beach' },
-  { name: 'Manali', type: 'Domestic', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=280&fit=crop&auto=format', tag: '⛷️ Adventure' },
-  { name: 'Coorg', type: 'Domestic', img: 'https://images.unsplash.com/photo-1633145284780-c8fda4f11464?w=400&h=280&fit=crop&auto=format', tag: '☕ Nature' },
-  { name: 'Singapore', type: 'International', img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&h=280&fit=crop&auto=format', tag: '🌆 City' },
-  { name: 'Dubai', type: 'International', img: 'https://images.unsplash.com/flagged/photo-1559717201-fbb671ff56b7?w=400&h=280&fit=crop&auto=format', tag: '🌟 Luxury' },
-  { name: 'Thailand', type: 'International', img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&h=280&fit=crop&auto=format', tag: '🐘 Culture' },
+  { name: 'Goa', type: 'Domestic', img: localPhoto("Goa.avif"), tag: '🏖️ Beach' },
+  { name: 'Manali', type: 'Domestic', img: localPhoto("Manali.avif"), tag: '⛷️ Adventure' },
+  { name: 'Coorg', type: 'Domestic', img: localPhoto("coorg.avif"), tag: '☕ Nature' },
+  { name: 'Singapore', type: 'International', img: localPhoto("Singapore.avif"), tag: '🌆 City' },
+  { name: 'Dubai', type: 'International', img: localPhoto("Dubai.avif"), tag: '🌟 Luxury' },
+  { name: 'Thailand', type: 'International', img: localPhoto("Thailand.avif"), tag: '🐘 Culture' },
 ]
 
 const stats = [
@@ -86,7 +87,7 @@ export default function CorporateToursPage({ navigate, currentUser: _currentUser
       {/* Hero */}
       <div className="relative min-h-[28rem] bg-gray-900 overflow-hidden flex items-center">
         <img
-          src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1400&h=700&fit=crop&auto=format"
+          src={localPhoto('Corporate event.avif')}
           alt="Corporate event"
           className="absolute inset-0 w-full h-full object-cover opacity-40"
         />

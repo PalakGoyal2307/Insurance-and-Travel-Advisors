@@ -1,5 +1,8 @@
 import type { PageId } from '../App'
 import type { AuthUser } from '../utils/authApi'
+import careHealthInsurance from '../assets/insurance_photos/Care Health Insurance.png'
+import licOfIndia from '../assets/insurance_photos/LIC of India.png'
+import tataAigGeneralInsurance from '../assets/insurance_photos/Tata AIG General Insurance.jpeg'
 
 interface Props {
   page: PageId
@@ -75,7 +78,7 @@ function InsuranceOverview({ navigate }: { navigate: (p: PageId) => void }) {
             <div className="h-4 w-full" style={{ background: 'linear-gradient(90deg, #FF6B00, #FF9A00)' }} />
             <div className="p-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #FF6B00, #FF9A00)' }}>
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgpLqxq1LznO6UhVff-_RFoGteMwwe2Gk0qC8p1geKFA&s=10" alt="Care Health Insurance" className="h-12 w-12 object-contain" />
+                <img src={careHealthInsurance} alt="Care Health Insurance" className="h-12 w-12 object-contain" />
               </div>
               <div className="mb-1"><span className="text-xs text-orange-400 font-bold tracking-widest uppercase">Care Insurance</span></div>
               <h3 className="font-display text-[#0D2B5E] text-2xl font-bold mb-3">Health Insurance</h3>
@@ -90,7 +93,7 @@ function InsuranceOverview({ navigate }: { navigate: (p: PageId) => void }) {
             <div className="h-4 w-full" style={{ background: 'linear-gradient(90deg, #003366, #0066CC)' }} />
             <div className="p-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366, #0066CC)' }}>
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXREkopB09rB7EhHxfTIhg2KYxAiD8yblPS21rlaBcUQ&s=10" alt="LIC of India" className="h-12 w-12 object-contain" />
+                <img src={licOfIndia} alt="LIC of India" className="h-12 w-12 object-contain" />
               </div>
               <div className="mb-1"><span className="text-xs text-blue-600 font-bold tracking-widest uppercase">LIC of India</span></div>
               <h3 className="font-display text-[#0D2B5E] text-2xl font-bold mb-3">Life Insurance</h3>
@@ -105,7 +108,7 @@ function InsuranceOverview({ navigate }: { navigate: (p: PageId) => void }) {
             <div className="h-4 w-full" style={{ background: 'linear-gradient(90deg, #005555, #00897B)' }} />
             <div className="p-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #005555, #00897B)' }}>
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDlEqzARCTyQG4tKytXk7I2Pj74bow96iDaZuGucjBSw&s=10" alt="Tata AIG General Insurance" className="h-12 w-12 object-contain" />
+                <img src={tataAigGeneralInsurance} alt="Tata AIG General Insurance" className="h-12 w-12 object-contain" />
               </div>
               <div className="mb-1"><span className="text-xs text-teal-600 font-bold tracking-widest uppercase">Tata AIG</span></div>
               <h3 className="font-display text-[#0D2B5E] text-2xl font-bold mb-3">General Insurance</h3>

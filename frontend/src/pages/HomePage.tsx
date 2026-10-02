@@ -4,6 +4,7 @@ import { buildAutoReplyMessage, sendEmailWithAutoReply } from '../formEmail.ts'
 import { CONTACT_EMAIL, LINKEDIN_URL, PHONE_NUMBER, PHONE_TEL } from '../constants/contact'
 import { createContactInquiry } from '../utils/contactApi'
 import type { AuthUser } from '../utils/authApi'
+import { localPhoto } from '../assets/localPhoto'
 
 interface Props {
   navigate: (p: PageId) => void
@@ -13,7 +14,7 @@ interface Props {
   currentUser: AuthUser | null
 }
 
-const fallbackImage = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop&auto=format'
+const fallbackImage = localPhoto("fallbackImage.avif")
 
 const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
   const target = event.currentTarget
@@ -23,38 +24,38 @@ const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
 }
 
 const floatingImages = [
-  { url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=360&h=240&fit=crop&auto=format', alt: 'Taj Mahal India', cls: 'animate-float1', style: { top: '8%', left: '2%', width: 220, height: 150, rotate: '-4deg' } },
-  { url: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=360&h=240&fit=crop&auto=format', alt: 'Eiffel Tower Paris', cls: 'animate-float2', style: { top: '5%', right: '3%', width: 200, height: 140, rotate: '5deg' } },
-  { url: 'https://images.unsplash.com/photo-1603477849227-705c424d1d80?w=360&h=240&fit=crop&auto=format', alt: 'Maldives resort', cls: 'animate-float3', style: { bottom: '20%', left: '1%', width: 200, height: 135, rotate: '-6deg' } },
-  { url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=360&h=240&fit=crop&auto=format', alt: 'Bali temple', cls: 'animate-float4', style: { bottom: '18%', right: '2%', width: 210, height: 145, rotate: '4deg' } },
-  { url: 'https://images.unsplash.com/photo-1575388104683-e076ee9ccaa0?w=360&h=240&fit=crop&auto=format', alt: 'Honeymoon beach couple', cls: 'animate-float5', style: { top: '42%', left: '0%', width: 170, height: 115, rotate: '3deg' } },
-  { url: 'https://images.unsplash.com/photo-1586752488885-6ce47fdfd874?w=360&h=240&fit=crop&auto=format', alt: 'Switzerland mountains', cls: 'animate-float1', style: { top: '35%', right: '1%', width: 175, height: 120, rotate: '-3deg' } },
+  { url: localPhoto("Taj Mahal India.avif"), alt: 'Taj Mahal India', cls: 'animate-float1', style: { top: '8%', left: '2%', width: 220, height: 150, rotate: '-4deg' } },
+  { url: localPhoto("Eiffel Tower Paris.avif"), alt: 'Eiffel Tower Paris', cls: 'animate-float2', style: { top: '5%', right: '3%', width: 200, height: 140, rotate: '5deg' } },
+  { url: localPhoto("Maldives resort.avif"), alt: 'Maldives resort', cls: 'animate-float3', style: { bottom: '20%', left: '1%', width: 200, height: 135, rotate: '-6deg' } },
+  { url: localPhoto("Bali temple.avif"), alt: 'Bali temple', cls: 'animate-float4', style: { bottom: '18%', right: '2%', width: 210, height: 145, rotate: '4deg' } },
+  { url: localPhoto("Honeymoon beach couple.avif"), alt: 'Honeymoon beach couple', cls: 'animate-float5', style: { top: '42%', left: '0%', width: 170, height: 115, rotate: '3deg' } },
+  { url: localPhoto("Switzerland mountains.avif"), alt: 'Switzerland mountains', cls: 'animate-float1', style: { top: '35%', right: '1%', width: 175, height: 120, rotate: '-3deg' } },
 ]
 
 const domesticDestinations = [
-  { name: 'Goa', tagline: 'Beaches & Vibrant Nightlife', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiNiYKe3OziQyEEh6yoJltraLA0U2pLc6wgy2p9lmRqA&s=10', top10: ['Baga Beach', 'Calangute Beach', 'Dudhsagar Falls', 'Old Goa Churches', 'Fort Aguada', 'Anjuna Flea Market', 'Chapora Fort', 'Palolem Beach', 'Basilica of Bom Jesus', 'Casino Cruise Night'] },
-  { name: 'Agra', tagline: 'The Taj Mahal & Mughal Heritage', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Taj Mahal', 'Agra Fort', 'Fatehpur Sikri', 'Mehtab Bagh', 'Itimad-ud-Daula', "Akbar's Tomb", 'Jama Masjid Agra', 'Kinari Bazaar', 'Dayal Bagh', 'Soami Bagh Temple'] },
-  { name: 'Kerala', tagline: "God's Own Country – Backwaters", img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsFBm24c8MFnAcctM85bu2fbnCDXRffa07XPCDPSUoNg&s=10', top10: ['Alleppey Backwaters', 'Munnar Tea Gardens', 'Varkala Beach', 'Fort Kochi', 'Periyar Wildlife Sanctuary', 'Thekkady', 'Wayanad Hills', 'Athirapally Falls', 'Kovalam Beach', 'Thrissur Pooram Festival'] },
-  { name: 'Rajasthan', tagline: 'Land of Kings – Royal Forts', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbnzQ7Nh7YFUs-9b_uM5smpZuzVSa4MtuzKIfXeC9ckg&s=10', top10: ['Amber Fort Jaipur', 'Mehrangarh Fort Jodhpur', 'Lake Palace Udaipur', 'Jaisalmer Fort', 'Pushkar Lake', 'Ranthambhore Tiger Reserve', 'City Palace Jaipur', 'Chittorgarh Fort', 'Bikaner Camel Festival', 'Hawa Mahal'] },
-  { name: 'Shimla', tagline: 'Queen of Hill Stations', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5OK_Gfdw3MKGiHUqudX7aBXAcj4emkFQ82oR9frSn0w&s=10', top10: ['The Ridge', 'Mall Road', 'Jakhu Temple', 'Kufri Snow Point', 'Naldehra Golf Course', 'Chail Palace', 'Tattapani Hot Springs', 'Narkanda Apple Orchards', 'Christ Church', 'Indian Institute of Advanced Study'] },
-  { name: 'Andaman', tagline: 'Pristine Beaches & Coral Reefs', img: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Radhanagar Beach', 'Cellular Jail', 'Elephant Beach', 'Ross Island', 'Baratang Island', 'Neil Island', 'North Bay Island', 'Jolly Buoy Coral Park', 'Diglipur Mud Volcano', 'Mahatma Gandhi Marine Park'] },
-  { name: 'Varanasi', tagline: 'The Spiritual Capital of India', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOvzV7HCEPfVxAHiyiG_f9qQnRurp_Zb04aXt8KpL5BA&s=10', top10: ['Kashi Vishwanath Temple', 'Dashashwamedh Ghat', 'Manikarnika Ghat', 'Sarnath Stupa', 'Assi Ghat', 'Ramnagar Fort', 'Bharat Mata Temple', 'Ganga Aarti Ceremony', 'Durga Temple', 'Sankat Mochan Hanuman Temple'] },
-  { name: 'Manali', tagline: 'Himalayan Adventure Paradise', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkpjh1goQQfN4Si8PwIzQsB7IsBUCTSpX4ZhKD2mC6hQ&s=10', top10: ['Rohtang Pass', 'Solang Valley', 'Hadimba Devi Temple', 'Old Manali Village', 'Beas Kund Trek', 'Manikaran Gurudwara', 'Naggar Castle', 'Chandrakhani Pass', 'Kullu Dussehra Festival', 'Kullu River Rafting'] },
-  { name: 'Darjeeling', tagline: 'Tea Gardens & Himalayan Views', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOSFm7-8OxOPoCuQBR73kmzQ-up9298Dr4JhFTy2NxUg&s=10', top10: ['Tiger Hill Sunrise', 'Darjeeling Himalayan Railway', 'Happy Valley Tea Estate', 'Batasia Loop', 'Peace Pagoda', 'Padmaja Naidu Zoo', 'Rock Garden', 'Makaibari Tea Garden', 'Ghoom Monastery', 'Observatory Hill'] },
-  { name: 'Mumbai', tagline: 'City of Dreams & Bollywood', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpfjs4b2rOKux9Cq9KKXPylIOf65Nbqobnmq4P5jl9kQ&s=10', top10: ['Gateway of India', 'Marine Drive', 'Elephanta Caves', 'Chhatrapati Shivaji Terminus', 'Siddhivinayak Temple', 'Juhu Beach', 'Dharavi', 'Film City', 'Haji Ali Dargah', 'Sanjay Gandhi National Park'] },
+  { name: 'Goa', tagline: 'Beaches & Vibrant Nightlife', img: localPhoto("Beaches & Vibrant Nightlife.jpeg"), top10: ['Baga Beach', 'Calangute Beach', 'Dudhsagar Falls', 'Old Goa Churches', 'Fort Aguada', 'Anjuna Flea Market', 'Chapora Fort', 'Palolem Beach', 'Basilica of Bom Jesus', 'Casino Cruise Night'] },
+  { name: 'Agra', tagline: 'The Taj Mahal & Mughal Heritage', img: localPhoto("The Taj Mahal & Mughal Heritage.avif"), top10: ['Taj Mahal', 'Agra Fort', 'Fatehpur Sikri', 'Mehtab Bagh', 'Itimad-ud-Daula', "Akbar's Tomb", 'Jama Masjid Agra', 'Kinari Bazaar', 'Dayal Bagh', 'Soami Bagh Temple'] },
+  { name: 'Kerala', tagline: "God's Own Country – Backwaters", img: localPhoto("God's Own Country – Backwaters.jpeg"), top10: ['Alleppey Backwaters', 'Munnar Tea Gardens', 'Varkala Beach', 'Fort Kochi', 'Periyar Wildlife Sanctuary', 'Thekkady', 'Wayanad Hills', 'Athirapally Falls', 'Kovalam Beach', 'Thrissur Pooram Festival'] },
+  { name: 'Rajasthan', tagline: 'Land of Kings – Royal Forts', img: localPhoto("Land of Kings – Royal Forts.jpeg"), top10: ['Amber Fort Jaipur', 'Mehrangarh Fort Jodhpur', 'Lake Palace Udaipur', 'Jaisalmer Fort', 'Pushkar Lake', 'Ranthambhore Tiger Reserve', 'City Palace Jaipur', 'Chittorgarh Fort', 'Bikaner Camel Festival', 'Hawa Mahal'] },
+  { name: 'Shimla', tagline: 'Queen of Hill Stations', img: localPhoto("Queen of Hill Stations.jpeg"), top10: ['The Ridge', 'Mall Road', 'Jakhu Temple', 'Kufri Snow Point', 'Naldehra Golf Course', 'Chail Palace', 'Tattapani Hot Springs', 'Narkanda Apple Orchards', 'Christ Church', 'Indian Institute of Advanced Study'] },
+  { name: 'Andaman', tagline: 'Pristine Beaches & Coral Reefs', img: localPhoto("Pristine Beaches & Coral Reefs.avif"), top10: ['Radhanagar Beach', 'Cellular Jail', 'Elephant Beach', 'Ross Island', 'Baratang Island', 'Neil Island', 'North Bay Island', 'Jolly Buoy Coral Park', 'Diglipur Mud Volcano', 'Mahatma Gandhi Marine Park'] },
+  { name: 'Varanasi', tagline: 'The Spiritual Capital of India', img: localPhoto("The Spiritual Capital of India.jpeg"), top10: ['Kashi Vishwanath Temple', 'Dashashwamedh Ghat', 'Manikarnika Ghat', 'Sarnath Stupa', 'Assi Ghat', 'Ramnagar Fort', 'Bharat Mata Temple', 'Ganga Aarti Ceremony', 'Durga Temple', 'Sankat Mochan Hanuman Temple'] },
+  { name: 'Manali', tagline: 'Himalayan Adventure Paradise', img: localPhoto("Himalayan Adventure Paradise.jpeg"), top10: ['Rohtang Pass', 'Solang Valley', 'Hadimba Devi Temple', 'Old Manali Village', 'Beas Kund Trek', 'Manikaran Gurudwara', 'Naggar Castle', 'Chandrakhani Pass', 'Kullu Dussehra Festival', 'Kullu River Rafting'] },
+  { name: 'Darjeeling', tagline: 'Tea Gardens & Himalayan Views', img: localPhoto("Tea Gardens & Himalayan Views.jpeg"), top10: ['Tiger Hill Sunrise', 'Darjeeling Himalayan Railway', 'Happy Valley Tea Estate', 'Batasia Loop', 'Peace Pagoda', 'Padmaja Naidu Zoo', 'Rock Garden', 'Makaibari Tea Garden', 'Ghoom Monastery', 'Observatory Hill'] },
+  { name: 'Mumbai', tagline: 'City of Dreams & Bollywood', img: localPhoto("City of Dreams & Bollywood.jpeg"), top10: ['Gateway of India', 'Marine Drive', 'Elephanta Caves', 'Chhatrapati Shivaji Terminus', 'Siddhivinayak Temple', 'Juhu Beach', 'Dharavi', 'Film City', 'Haji Ali Dargah', 'Sanjay Gandhi National Park'] },
 ]
 
 const internationalDestinations = [
-  { name: 'Maldives', tagline: 'Paradise on Earth – Crystal Waters', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Male Atoll', 'Baa Atoll Biosphere', 'Maafushi Island', 'Banana Reef Dive', 'Ari Atoll', 'Vaadhoo Bioluminescent Beach', 'Hulhumale Beach', 'Cocoa Island Resort', 'Fulidhoo Island', 'Local Market Male'] },
-  { name: 'Paris', tagline: 'City of Love & Elegance', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Eiffel Tower', 'The Louvre Museum', 'Notre-Dame Cathedral', 'Champs-Élysées', 'Montmartre & Sacré-Cœur', 'Palace of Versailles', "Musée d'Orsay", 'Seine River Cruise', 'Arc de Triomphe', 'Moulin Rouge Show'] },
-  { name: 'Bali', tagline: 'Island of Gods – Spiritual Beauty', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSS_zsXBavLOHyPsNnIp_DOBlhFb7vYo5_BJintpjNyYw&s=10', top10: ['Tanah Lot Temple', 'Ubud Monkey Forest', 'Tegallalang Rice Terrace', 'Kuta Beach', 'Uluwatu Cliff Temple', 'Mount Batur Sunrise Trek', 'Seminyak', 'Besakih Mother Temple', 'Nusa Penida Island', 'Tirta Empul Holy Spring'] },
-  { name: 'Dubai', tagline: 'Luxury, Adventure & Desert Magic', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLkntRmp86BlCPN05KdT7OqXYLlrSjKQ7wYaSf0Jj88g&s=10', top10: ['Burj Khalifa Top', 'Dubai Mall', 'Desert Safari', 'Palm Jumeirah', 'Dubai Frame', 'Gold & Spice Souks', 'Burj Al Arab', 'Dubai Creek', 'Miracle Garden', 'Abu Dhabi Day Trip'] },
-  { name: 'Singapore', tagline: 'Garden City & Modern Marvel', img: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Marina Bay Sands', 'Gardens by the Bay', 'Sentosa Island', 'Universal Studios', 'Chinatown & Little India', 'Singapore Zoo', 'Night Safari', 'Orchard Road Shopping', 'Clarke Quay', 'Jurong Bird Park'] },
-  { name: 'Thailand', tagline: 'Land of Smiles & Temples', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2hEure12sYWL4LmEfXxtNA23laW-QfFCU9RBmk317Zw&s=10', top10: ['Grand Palace Bangkok', 'Phi Phi Islands', 'Chiang Mai Old City', 'Wat Phra Kaew Temple', 'Phuket Beaches', 'Floating Market', 'Elephant Sanctuary', 'Railay Beach Krabi', 'Ayutthaya Historic Park', 'Koh Samui'] },
-  { name: 'Switzerland', tagline: 'Alpine Wonderland & Pristine Lakes', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRatwcbACVb_YJP6fmOnNOw12Tv3Khw0d4higjTaskTg&s=10', top10: ['Jungfraujoch "Top of Europe"', 'Interlaken Adventure Hub', 'Lake Geneva', 'Zermatt & Matterhorn', 'Lucerne Old Town', 'Rhine Falls', 'Zurich Old Town', 'Bern Old City', 'Grindelwald Glacier', 'Montreux Jazz Festival'] },
-  { name: 'Japan', tagline: 'Tradition Meets Futurism', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHqdTYAbZpCa93fUzU_ZRMaPSkjWfOvlcqBWo3pYIThw&s=10', top10: ['Mount Fuji', 'Tokyo Shibuya Crossing', 'Kyoto Arashiyama', 'Osaka Castle', 'Nara Deer Park', 'Hiroshima Peace Memorial', 'Fushimi Inari Shrine', 'Akihabara Electronics Town', 'Hakone Onsen', 'Tokyo Disneyland'] },
-  { name: 'Australia', tagline: 'Land Down Under – Wild & Beautiful', img: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Sydney Opera House', 'Great Barrier Reef', 'Uluru (Ayers Rock)', 'Bondi Beach', 'Great Ocean Road', 'Daintree Rainforest', 'Melbourne CBD', 'Blue Mountains', 'Kakadu National Park', 'Whitsunday Islands'] },
-  { name: 'New York', tagline: 'The City That Never Sleeps', img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&h=400&fit=crop&auto=format&q=80', top10: ['Statue of Liberty', 'Times Square', 'Central Park', 'Empire State Building', 'Brooklyn Bridge', 'Metropolitan Museum', 'Broadway Shows', '9/11 Memorial', 'High Line Park', 'Coney Island Beach'] },
+  { name: 'Maldives', tagline: 'Paradise on Earth – Crystal Waters', img: localPhoto("Paradise on Earth – Crystal Waters.avif"), top10: ['Male Atoll', 'Baa Atoll Biosphere', 'Maafushi Island', 'Banana Reef Dive', 'Ari Atoll', 'Vaadhoo Bioluminescent Beach', 'Hulhumale Beach', 'Cocoa Island Resort', 'Fulidhoo Island', 'Local Market Male'] },
+  { name: 'Paris', tagline: 'City of Love & Elegance', img: localPhoto("City of Love & Elegance.avif"), top10: ['Eiffel Tower', 'The Louvre Museum', 'Notre-Dame Cathedral', 'Champs-Élysées', 'Montmartre & Sacré-Cœur', 'Palace of Versailles', "Musée d'Orsay", 'Seine River Cruise', 'Arc de Triomphe', 'Moulin Rouge Show'] },
+  { name: 'Bali', tagline: 'Island of Gods – Spiritual Beauty', img: localPhoto("Island of Gods – Spiritual Beauty.jpeg"), top10: ['Tanah Lot Temple', 'Ubud Monkey Forest', 'Tegallalang Rice Terrace', 'Kuta Beach', 'Uluwatu Cliff Temple', 'Mount Batur Sunrise Trek', 'Seminyak', 'Besakih Mother Temple', 'Nusa Penida Island', 'Tirta Empul Holy Spring'] },
+  { name: 'Dubai', tagline: 'Luxury, Adventure & Desert Magic', img: localPhoto("Luxury, Adventure & Desert Magic.jpeg"), top10: ['Burj Khalifa Top', 'Dubai Mall', 'Desert Safari', 'Palm Jumeirah', 'Dubai Frame', 'Gold & Spice Souks', 'Burj Al Arab', 'Dubai Creek', 'Miracle Garden', 'Abu Dhabi Day Trip'] },
+  { name: 'Singapore', tagline: 'Garden City & Modern Marvel', img: localPhoto("Garden City & Modern Marvel.avif"), top10: ['Marina Bay Sands', 'Gardens by the Bay', 'Sentosa Island', 'Universal Studios', 'Chinatown & Little India', 'Singapore Zoo', 'Night Safari', 'Orchard Road Shopping', 'Clarke Quay', 'Jurong Bird Park'] },
+  { name: 'Thailand', tagline: 'Land of Smiles & Temples', img: localPhoto("Land of Smiles & Temples.jpeg"), top10: ['Grand Palace Bangkok', 'Phi Phi Islands', 'Chiang Mai Old City', 'Wat Phra Kaew Temple', 'Phuket Beaches', 'Floating Market', 'Elephant Sanctuary', 'Railay Beach Krabi', 'Ayutthaya Historic Park', 'Koh Samui'] },
+  { name: 'Switzerland', tagline: 'Alpine Wonderland & Pristine Lakes', img: localPhoto("Alpine Wonderland & Pristine Lakes.jpeg"), top10: ['Jungfraujoch "Top of Europe"', 'Interlaken Adventure Hub', 'Lake Geneva', 'Zermatt & Matterhorn', 'Lucerne Old Town', 'Rhine Falls', 'Zurich Old Town', 'Bern Old City', 'Grindelwald Glacier', 'Montreux Jazz Festival'] },
+  { name: 'Japan', tagline: 'Tradition Meets Futurism', img: localPhoto("Tradition Meets Futurism.jpeg"), top10: ['Mount Fuji', 'Tokyo Shibuya Crossing', 'Kyoto Arashiyama', 'Osaka Castle', 'Nara Deer Park', 'Hiroshima Peace Memorial', 'Fushimi Inari Shrine', 'Akihabara Electronics Town', 'Hakone Onsen', 'Tokyo Disneyland'] },
+  { name: 'Australia', tagline: 'Land Down Under – Wild & Beautiful', img: localPhoto("Land Down Under – Wild & Beautiful.avif"), top10: ['Sydney Opera House', 'Great Barrier Reef', 'Uluru (Ayers Rock)', 'Bondi Beach', 'Great Ocean Road', 'Daintree Rainforest', 'Melbourne CBD', 'Blue Mountains', 'Kakadu National Park', 'Whitsunday Islands'] },
+  { name: 'New York', tagline: 'The City That Never Sleeps', img: localPhoto("The City That Never Sleeps.avif"), top10: ['Statue of Liberty', 'Times Square', 'Central Park', 'Empire State Building', 'Brooklyn Bridge', 'Metropolitan Museum', 'Broadway Shows', '9/11 Memorial', 'High Line Park', 'Coney Island Beach'] },
 ]
 
 interface Destination {
@@ -640,10 +641,10 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {[
-              { icon: '⛰️', name: 'Char Dham Yatra', desc: 'Kedarnath · Badrinath · Gangotri · Yamunotri', img: 'https://images.unsplash.com/photo-1706186839147-0d708602587b?w=400&h=280&fit=crop&auto=format' },
-              { icon: '🪔', name: 'Kashi Vishwanath', desc: 'Varanasi – The Eternal City of Shiva', img: 'https://images.unsplash.com/photo-1627938823193-fd13c1c867dd?w=400&h=280&fit=crop&auto=format' },
-              { icon: '🛕', name: 'Tirupati Balaji', desc: "World's Most Visited Temple", img: 'https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=400&h=280&fit=crop&auto=format' },
-              { icon: '⭐', name: 'Golden Temple', desc: 'Amritsar – The Sikh Holy Shrine', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqH2lfKbHTjfK5_otc7Tphy7uLHTB_IKNodhvDnfLbew&s=10' },
+              { icon: '⛰️', name: 'Char Dham Yatra', desc: 'Kedarnath · Badrinath · Gangotri · Yamunotri', img: localPhoto("Char Dham Yatra.avif") },
+              { icon: '🪔', name: 'Kashi Vishwanath', desc: 'Varanasi – The Eternal City of Shiva', img: localPhoto("Kashi Vishwanath.avif") },
+              { icon: '🛕', name: 'Tirupati Balaji', desc: "World's Most Visited Temple", img: localPhoto("Tirupati Balaji.avif") },
+              { icon: '⭐', name: 'Golden Temple', desc: 'Amritsar – The Sikh Holy Shrine', img: localPhoto("Golden Temple.jpeg") },
             ].map(trip => (
               <button key={trip.name} onClick={() => navigate('religious')} className="card-hover bg-white rounded-2xl overflow-hidden shadow-lg text-left group">
                 <div className="h-40 relative bg-gray-200 overflow-hidden">
@@ -689,7 +690,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
             </div>
             <div className="relative">
               <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROYIkIw_kwzWIQVxI5ygx-tFxFhu9pZnMKaifGhR4edQ&s=10" alt="Corporate conference" className="w-full h-80 object-cover" onError={handleImageError} />
+                  <img src={localPhoto('Corporate conference.jpeg')} alt="Corporate conference" className="w-full h-80 object-cover" onError={handleImageError} />
               </div>
             </div>
           </div>
@@ -700,7 +701,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
       <section className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-            <img src="https://images.unsplash.com/photo-1701401942416-bea590efe2ad?w=1400&h=500&fit=crop&auto=format" alt="Honeymoon couple sunset" className="w-full h-80 sm:h-96 object-cover" onError={handleImageError} />
+            <img src={localPhoto('Honeymoon couple sunset.avif')} alt="Honeymoon couple sunset" className="w-full h-80 sm:h-96 object-cover" onError={handleImageError} />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(13,43,94,0.85) 0%, rgba(13,43,94,0.5) 60%, transparent 100%)' }} />
             <div className="absolute inset-0 flex items-center px-8 sm:px-16">
               <div className="max-w-lg">
@@ -731,7 +732,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
               <div className="relative bg-gradient-to-br from-[#0D2B5E] to-[#0e4f7a] p-10 flex flex-col justify-center items-center text-center">
                 {/* Founder Image */}
                 <div className="w-50 h-58 rounded-full border-4 border-[#F47B20]/60 mb-6 overflow-hidden bg-white flex items-center justify-center shadow-2xl">
-                  <img src="https://drive.google.com/thumbnail?id=1ZBFnoqgrrG4CVlF6TmBDnOq4vEdYuuYO&sz=w1000" alt="Akash Goyal - Founder" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&auto=format' }} />
+                  <img src={localPhoto('Akash Goyal - Founder.jpeg')} alt="Akash Goyal - Founder" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = localPhoto('Akash Goyal - Founder.jpeg') }} />
                 </div>
                 <h3 className="font-display text-white text-2xl font-bold">Akash Goyal</h3>
                 <p className="text-[#F47B20] font-bold text-sm tracking-wider uppercase mt-1">Founder & Principal Advisor</p>
