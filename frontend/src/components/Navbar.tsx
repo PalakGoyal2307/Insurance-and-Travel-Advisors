@@ -113,7 +113,7 @@ export default function Navbar({
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-lg shadow-lg border-b border-blue-100">
+    <nav className="premium-nav fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-lg shadow-lg border-b border-blue-100" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-2">
 

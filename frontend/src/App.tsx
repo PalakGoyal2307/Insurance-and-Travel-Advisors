@@ -193,7 +193,7 @@ export default function App() {
   const isInsurancePage = page === 'insurance' || (page.startsWith('insurance-') && page !== 'insurance-form')
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#EFF6FF' }}>
+    <div className="app-shell min-h-screen">
       <Navbar
         navigate={navigate}
         openQueryForm={openQueryForm}

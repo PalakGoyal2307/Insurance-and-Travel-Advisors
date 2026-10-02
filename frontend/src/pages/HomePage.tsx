@@ -443,12 +443,12 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
       )}
 
       {/* ── HERO SECTION ── */}
-      <section className="relative min-h-[100svh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-12 sm:py-0" style={{ background: 'linear-gradient(135deg, #050f1f 0%, #0D2B5E 50%, #0e4f7a 100%)' }}>
+      <section className="home-hero relative min-h-[100svh] sm:min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-12 sm:py-0" style={{ background: 'linear-gradient(135deg, #050f1f 0%, #0D2B5E 50%, #0e4f7a 100%)' }}>
         {/* Floating image cards */}
         {floatingImages.map((img, i) => (
           <div
             key={i}
-            className={`absolute hidden md:block ${img.cls} rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 pointer-events-none`}
+            className={`hero-photo-card absolute hidden md:block ${img.cls} rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 pointer-events-none`}
             style={{ ...img.style, position: 'absolute', zIndex: 1 }}
           >
             <img src={img.url} alt={img.alt} className="w-full h-full object-cover" style={{ width: img.style.width, height: img.style.height }} onError={handleImageError} />
@@ -478,7 +478,7 @@ export default function HomePage({ navigate, queryContext, setQueryContext, curr
         <div className="absolute inset-0 hero-overlay pt-0" style={{ zIndex: 2 }} />
 
         {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto animate-fade-in-up w-full">
+        <div className="hero-content relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto animate-fade-in-up w-full">
           
            <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-tight mb-3 sm:mb-2 break-words">
             Peaks & Protection
