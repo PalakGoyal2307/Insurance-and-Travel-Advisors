@@ -130,6 +130,13 @@ const memberSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const additionalProposerSchema = new mongoose.Schema({
+  sequence: { type: Number, required: true, min: 1 },
+  fullName: { type: String, required: true, trim: true, minlength: 2, maxlength: 120 },
+  email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
+  phone: { type: String, required: true, trim: true, maxlength: 20 },
+})
+
 const healthApplicationSchema = new mongoose.Schema(
   {
     userId: {
@@ -200,6 +207,10 @@ const healthApplicationSchema = new mongoose.Schema(
         },
         message: 'Proposer name is required only when proposer type is others',
       },
+    },
+    additionalProposers: {
+      type: [additionalProposerSchema],
+      default: [],
     },
     primaryMember: {
       type: memberSchema,

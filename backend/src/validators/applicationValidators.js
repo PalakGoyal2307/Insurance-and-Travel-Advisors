@@ -175,6 +175,19 @@ const createMemberPayloadValidator = (moduleName) => [
   body('sourceContext').optional().trim().isLength({ max: 150 }).withMessage('Source context must be at most 150 characters'),
   body('proposerType').optional().isIn(['self', 'others']).withMessage('Proposer type must be self or others'),
   body('proposerSequence').optional().isInt({ min: 1, max: 99 }).withMessage('Proposer sequence must be between 1 and 99'),
+  body('additionalProposers').optional().isArray().withMessage('Additional proposers must be an array'),
+  body('additionalProposers.*.sequence').if(body('additionalProposers').exists()).isInt({ min: 1 }).withMessage('Proposer sequence must be a positive integer'),
+  body('additionalProposers.*.fullName').if(body('additionalProposers').exists()).trim().isLength({ min: 2, max: 120 }).withMessage('Proposer name must be between 2 and 120 characters'),
+  body('additionalProposers.*.email').if(body('additionalProposers').exists()).trim().isEmail().withMessage('Each proposer must have a valid email').normalizeEmail(),
+  body('additionalProposers.*.phone').if(body('additionalProposers').exists()).trim().matches(phoneRegex).withMessage('Each proposer must have a valid phone number'),
+  body('additionalProposers').optional().custom((proposers) => {
+    if (!Array.isArray(proposers)) return true
+    const sequences = proposers.map((proposer) => Number(proposer?.sequence))
+    if (new Set(sequences).size !== sequences.length) {
+      throw new Error('Additional proposer sequences must be unique')
+    }
+    return true
+  }),
   body().custom((payload) => {
     const proposerType = String(payload.proposerType || 'self')
     const hasProposerSequence = payload.proposerSequence !== undefined && payload.proposerSequence !== null && payload.proposerSequence !== ''

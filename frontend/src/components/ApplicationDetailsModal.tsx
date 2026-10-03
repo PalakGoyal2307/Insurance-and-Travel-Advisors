@@ -158,7 +158,7 @@ export default function ApplicationDetailsModal({ title, application, uploadedDo
   }
 
   const topLevelRows = Object.entries(application)
-    .filter(([key, value]) => !['primaryMember', 'additionalMembers'].includes(key) && !hiddenFieldSet.has(key.toLowerCase()) && !Array.isArray(value) && !isRecord(value))
+    .filter(([key, value]) => !['primaryMember', 'additionalMembers', 'additionalProposers'].includes(key) && !hiddenFieldSet.has(key.toLowerCase()) && !Array.isArray(value) && !isRecord(value))
     .map(([key, value]) => (
       <tr key={key} className="border-t border-blue-100">
         <td className="px-4 py-3 font-semibold text-[#0D2B5E]">{getDocumentTitle(key)}</td>
@@ -167,6 +167,7 @@ export default function ApplicationDetailsModal({ title, application, uploadedDo
     ))
 
   const additionalMembers = Array.isArray(application.additionalMembers) ? application.additionalMembers : []
+  const additionalProposers = Array.isArray(application.additionalProposers) ? application.additionalProposers : []
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4" onClick={onClose}>
@@ -192,6 +193,32 @@ export default function ApplicationDetailsModal({ title, application, uploadedDo
 
           {additionalMembers.map((member, index) =>
             renderMemberSection(member, `Additional Member ${index + 1}`)
+          )}
+
+          {additionalProposers.length > 0 && (
+            <div className="rounded-2xl border border-blue-100 overflow-hidden">
+              <div className="bg-blue-50 px-4 py-3 text-sm font-bold text-[#0D2B5E]">Additional Proposers</div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-t border-blue-100 text-left">
+                    <th className="px-4 py-3">#</th>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {additionalProposers.map((proposer, index) => (
+                    <tr key={`proposer-${index}`} className="border-t border-blue-100">
+                      <td className="px-4 py-3">{formatValue(proposer.sequence || index + 1)}</td>
+                      <td className="px-4 py-3">{formatValue(proposer.fullName)}</td>
+                      <td className="px-4 py-3">{formatValue(proposer.email)}</td>
+                      <td className="px-4 py-3">{formatValue(proposer.phone)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

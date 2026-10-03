@@ -8,6 +8,7 @@ import {
   createGeneralApplication,
   createHealthApplication,
   createLifeApplication,
+  type AdditionalProposerPayload,
   type InsuranceMemberPayload,
 } from "../utils/insuranceApi";
 import { APPLICATION_DOCUMENTS } from "../constants/documents";
@@ -66,6 +67,9 @@ const getNextProposerSequenceFromProfile = (
           maxSequence,
           Number(application.proposerSequence) || 0,
         );
+      }
+      for (const proposer of application.additionalProposers || []) {
+        maxSequence = Math.max(maxSequence, Number(proposer.sequence) || 0);
       }
     }
   }
@@ -236,6 +240,7 @@ export default function InsuranceFormPage({
     phone,
     proposerType,
     proposerSequence,
+    additionalProposers,
     primaryMember,
     additionalMembers,
   }: {
@@ -244,6 +249,7 @@ export default function InsuranceFormPage({
     phone: string;
     proposerType: "self" | "others";
     proposerSequence?: number;
+    additionalProposers: AdditionalProposerPayload[];
     primaryMember: InsuranceMemberPayload;
     additionalMembers: InsuranceMemberPayload[];
   }) => {
@@ -270,6 +276,7 @@ export default function InsuranceFormPage({
         phone,
         proposerType,
         proposerSequence,
+        additionalProposers,
         primaryMember,
         additionalMembers,
         planName: planLabel,
@@ -327,6 +334,7 @@ export default function InsuranceFormPage({
     phone,
     proposerType,
     proposerSequence,
+    additionalProposers,
     primaryMember,
     additionalMembers,
   }: {
@@ -335,6 +343,7 @@ export default function InsuranceFormPage({
     phone: string;
     proposerType: "self" | "others";
     proposerSequence?: number;
+    additionalProposers: AdditionalProposerPayload[];
     primaryMember: InsuranceMemberPayload;
     additionalMembers: InsuranceMemberPayload[];
   }) => {
@@ -361,6 +370,7 @@ export default function InsuranceFormPage({
         phone,
         proposerType,
         proposerSequence,
+        additionalProposers,
         primaryMember,
         additionalMembers,
         planName: planLabel,

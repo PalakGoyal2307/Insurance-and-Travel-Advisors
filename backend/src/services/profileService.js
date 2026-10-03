@@ -41,6 +41,7 @@ const mapApplication = (application, moduleName) => ({
   proposerType: application.proposerType || 'self',
   proposerSequence: application.proposerSequence || null,
   proposerName: application.proposerName || '',
+  additionalProposers: application.additionalProposers || [],
   primaryMember: application.primaryMember,
   additionalMembers: application.additionalMembers,
 })

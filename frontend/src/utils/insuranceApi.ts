@@ -8,6 +8,7 @@ export interface InsuranceApplicationItem {
   proposerType?: 'self' | 'others'
   proposerSequence?: number | null
   proposerName?: string
+  additionalProposers?: AdditionalProposerPayload[]
   createdAt: string
   updatedAt: string
   fullName: string
@@ -64,12 +65,20 @@ export interface InsuranceMemberPayload {
   nomineeBankProofDocumentId?: string
 }
 
+export interface AdditionalProposerPayload {
+  sequence: number
+  fullName: string
+  email: string
+  phone: string
+}
+
 export interface CreateHealthApplicationPayload {
   fullName: string
   email: string
   phone: string
   proposerType?: 'self' | 'others'
   proposerSequence?: number
+  additionalProposers?: AdditionalProposerPayload[]
   primaryMember: InsuranceMemberPayload
   additionalMembers?: InsuranceMemberPayload[]
   planName?: string
@@ -82,6 +91,7 @@ export interface CreateLifeApplicationPayload {
   phone: string
   proposerType?: 'self' | 'others'
   proposerSequence?: number
+  additionalProposers?: AdditionalProposerPayload[]
   primaryMember: InsuranceMemberPayload
   additionalMembers?: InsuranceMemberPayload[]
   planName?: string

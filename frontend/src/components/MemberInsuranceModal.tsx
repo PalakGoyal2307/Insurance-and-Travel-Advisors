@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import DocumentUploadButton from './DocumentUploadButton'
-import type { InsuranceMemberPayload } from '../utils/insuranceApi'
+import type { AdditionalProposerPayload, InsuranceMemberPayload } from '../utils/insuranceApi'
 import { getDocumentDownloadUrl, getDocumentViewUrl, type ProfileDocumentItem } from '../utils/documentApi'
 
 type InsuranceKind = 'health' | 'life'
@@ -40,6 +40,7 @@ interface SubmitPayload {
   phone: string
   proposerType: 'self' | 'others'
   proposerSequence?: number
+  additionalProposers: AdditionalProposerPayload[]
   primaryMember: InsuranceMemberPayload
   additionalMembers: InsuranceMemberPayload[]
 }
@@ -242,6 +243,7 @@ export default function MemberInsuranceModal({
   const [proposerSequence] = useState(Math.max(1, Number(nextProposerSequence) || 1))
   const [contactEmail, setContactEmail] = useState(prefillUser?.email || '')
   const [contactPhone, setContactPhone] = useState(prefillUser?.phone || '')
+  const [additionalProposers, setAdditionalProposers] = useState<Array<Omit<AdditionalProposerPayload, 'sequence'>>>([])
   const selfDocuments = useMemo(
     () => existingDocuments.filter((document) => (document.documentOwnerType || 'user') !== 'proposer'),
     [existingDocuments]
@@ -450,13 +452,20 @@ export default function MemberInsuranceModal({
 
     const primaryMember = toMemberPayload(members[0], true)
     const additionalMembers = members.slice(1).map((member) => toMemberPayload(member, false))
+    const proposerSequenceOffset = proposerType === 'others' ? proposerSequence : Math.max(0, nextProposerSequence - 1)
 
     await onSubmit({
       fullName: members[0].fullName.trim(),
       email: contactEmail.trim(),
-      phone: contactPhone.trim(),
+      phone: contactPhone.trim().replace(/\s+/g, ''),
       proposerType,
       proposerSequence: proposerType === 'others' ? proposerSequence : undefined,
+      additionalProposers: additionalProposers.map((proposer, index) => ({
+        ...proposer,
+        email: proposer.email.trim(),
+        phone: proposer.phone.trim().replace(/\s+/g, ''),
+        sequence: proposerSequenceOffset + index + 1,
+      })),
       primaryMember,
       additionalMembers,
     })
@@ -571,6 +580,70 @@ export default function MemberInsuranceModal({
                 required
               />
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-blue-100 bg-white p-4 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-[#0D2B5E]">Additional Proposers</h3>
+                <p className="text-xs text-gray-500 mt-1">Add every other proposer for this application.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdditionalProposers((current) => [...current, { fullName: '', email: '', phone: '' }])}
+                className="px-4 py-2 rounded-xl font-bold text-sm text-[#0D2B5E] border border-blue-200 hover:bg-blue-50"
+              >
+                Add Proposer
+              </button>
+            </div>
+            {additionalProposers.map((proposer, index) => (
+              <div key={`additional-proposer-${index}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="required-label text-xs font-bold text-[#0D2B5E]">Proposer {index + 1} Name</label>
+                  <input
+                    value={proposer.fullName}
+                    onChange={(event) => setAdditionalProposers((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, fullName: event.target.value } : item))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm"
+                    placeholder="Full Name"
+                    minLength={2}
+                    maxLength={120}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="required-label text-xs font-bold text-[#0D2B5E]">Email</label>
+                  <input
+                    type="email"
+                    value={proposer.email}
+                    onChange={(event) => setAdditionalProposers((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, email: event.target.value } : item))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm"
+                    placeholder="proposer@example.com"
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="required-label text-xs font-bold text-[#0D2B5E]">Phone</label>
+                  <input
+                    type="tel"
+                    value={proposer.phone}
+                    onChange={(event) => setAdditionalProposers((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, phone: event.target.value } : item))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm"
+                    placeholder="+91XXXXXXXXXX"
+                    required
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => setAdditionalProposers((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                    className="px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50"
+                    aria-label={`Remove proposer ${index + 1}`}
+                  >
+                    Remove Proposer
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {members.map((member, index) => {

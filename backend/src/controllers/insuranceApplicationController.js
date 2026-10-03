@@ -31,6 +31,13 @@ const createApplicationFactory = (moduleName, Model) => asyncHandler(async (req,
       memberNumber: index + 2,
     }))
 
+    payload.additionalProposers = (Array.isArray(payload.additionalProposers) ? payload.additionalProposers : []).map((proposer, index) => ({
+      sequence: Number(proposer.sequence) || index + 1,
+      fullName: String(proposer.fullName || '').trim(),
+      email: String(proposer.email || '').trim().toLowerCase(),
+      phone: String(proposer.phone || '').trim(),
+    }))
+
     payload.proposerType = payload.proposerType === 'others' ? 'others' : 'self'
     payload.proposerSequence = payload.proposerType === 'others' ? Number(payload.proposerSequence) : null
     payload.proposerName = payload.proposerType === 'others'

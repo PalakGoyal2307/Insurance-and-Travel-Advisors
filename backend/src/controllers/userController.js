@@ -34,37 +34,33 @@ export const listUsersForAdmin = asyncHandler(async (req, res) => {
 
   const userIds = items.map((item) => item._id)
   const [healthProposers, lifeProposers] = await Promise.all([
-    HealthApplication.find({
-      userId: { $in: userIds },
-      proposerType: 'others',
-      proposerName: { $exists: true, $ne: '' },
-    })
-      .select('userId proposerName createdAt')
+    HealthApplication.find({ userId: { $in: userIds } })
+      .select('userId proposerType proposerName additionalProposers createdAt')
       .sort({ createdAt: -1 })
       .lean(),
-    LifeApplication.find({
-      userId: { $in: userIds },
-      proposerType: 'others',
-      proposerName: { $exists: true, $ne: '' },
-    })
-      .select('userId proposerName createdAt')
+    LifeApplication.find({ userId: { $in: userIds } })
+      .select('userId proposerType proposerName additionalProposers createdAt')
       .sort({ createdAt: -1 })
       .lean(),
   ])
 
-  const proposerNameByUserId = new Map()
-  ;[...healthProposers, ...lifeProposers]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .forEach((item) => {
-      const key = item.userId.toString()
-      if (!proposerNameByUserId.has(key)) {
-        proposerNameByUserId.set(key, item.proposerName)
-      }
+  const proposerNamesByUserId = new Map()
+  ;[...healthProposers, ...lifeProposers].forEach((item) => {
+    const key = item.userId.toString()
+    const names = proposerNamesByUserId.get(key) || []
+    const applicationNames = [
+      item.proposerType === 'others' ? item.proposerName : '',
+      ...(item.additionalProposers || []).map((proposer) => proposer.fullName),
+    ].map((name) => String(name || '').trim()).filter(Boolean)
+    applicationNames.forEach((name) => {
+      if (!names.includes(name)) names.push(name)
     })
+    proposerNamesByUserId.set(key, names)
+  })
 
   const enrichedItems = items.map((item) => ({
     ...item,
-    proposerName: proposerNameByUserId.get(item._id.toString()) || '',
+    proposerName: (proposerNamesByUserId.get(item._id.toString()) || []).join(', '),
   }))
 
   res.status(200).json({
