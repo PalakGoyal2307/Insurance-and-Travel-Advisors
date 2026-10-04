@@ -37,9 +37,21 @@ export default function LoginPage({ navigate, onLoginSuccess }: Props) {
       }
     } catch (err) {
       if (err instanceof ApiRequestError) {
-        setError(err.message)
+        if (err.statusCode === 0) {
+          setError(err.message)
+        } else if (err.statusCode === 401) {
+          setError('The email address or password is incorrect. Please check your details and try again.')
+        } else if (err.statusCode === 403) {
+          setError(err.message || 'This account is inactive. Please contact support.')
+        } else if (err.statusCode === 429) {
+          setError(err.message || 'Too many login attempts. Please wait a few minutes and try again.')
+        } else if (err.statusCode >= 500) {
+          setError('The login service is temporarily unavailable. Please try again shortly.')
+        } else {
+          setError(err.message)
+        }
       } else {
-        setError('Unable to login right now. Please try again.')
+        setError('Something went wrong while signing in. Please try again.')
       }
     } finally {
       setIsSubmitting(false)
