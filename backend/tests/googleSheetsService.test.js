@@ -131,3 +131,74 @@ test('retains the primary proposer name along with the additional proposer list'
   assert.equal(row[state.headers.indexOf('Proposer Name')], 'Primary Proposer Name')
   assert.equal(JSON.parse(row[state.headers.indexOf('Additional Proposers')]).length, 2)
 })
+
+test('keeps fixed member-number headers and writes disease details into the matching member columns', async () => {
+  const { client, state } = createSheetsMock()
+  setGoogleSheetsClientForTests(client)
+
+  await appendFormSubmission({
+    formType: 'Health Application',
+    payload: {
+      fullName: 'Account Holder',
+      email: 'holder@example.com',
+      phone: '9876543210',
+      planName: 'Sample Plan',
+      primaryMember: {
+        fullName: 'Primary Person',
+        dob: '1990-02-03',
+        age: 36,
+        heightFeet: 5,
+        heightInch: 7,
+        weightKg: 65,
+        address: 'Primary address',
+        pincode: '123456',
+        diseases: { mode: 'listed', names: ['Diabetes'], otherText: 'Rare condition' },
+      },
+      additionalMembers: [
+        {
+          fullName: 'Non Primary One',
+          relation: 'Spouse',
+          dob: '1992-04-05',
+          age: 34,
+          heightFeet: 5,
+          heightInch: 3,
+          weightKg: 55,
+          diseases: { mode: 'notApplicable', names: [], otherText: '' },
+        },
+        {
+          fullName: 'Non Primary Two',
+          relation: 'Mother',
+          dob: '1960-06-07',
+          age: 66,
+          heightFeet: 5,
+          heightInch: 1,
+          weightKg: 60,
+          diseases: { mode: 'listed', names: ['BP'], otherText: '' },
+        },
+      ],
+    },
+  })
+
+  const row = state.rows[0]
+  const cell = (header) => row[state.headers.indexOf(header)]
+  assert.ok(state.headers.includes('Primary Member Diseases'))
+  assert.ok(state.headers.includes('Primary Member Other Disease'))
+  assert.ok(state.headers.includes('Member 1 Relation'))
+  assert.ok(state.headers.includes('Member 1 Diseases'))
+  assert.ok(state.headers.includes('Member 1 Other Disease'))
+  assert.ok(state.headers.includes('Member 2 Diseases'))
+  assert.ok(state.headers.includes('Member 3 Diseases'))
+  assert.ok(!state.headers.includes('Primary Member Relation'))
+  assert.ok(!state.headers.includes('Member 1 Address'))
+  assert.ok(!state.headers.includes('Member 1 Pincode'))
+
+  assert.equal(cell('Primary Member Diseases'), 'Diabetes')
+  assert.equal(cell('Primary Member Other Disease'), 'Rare condition')
+  assert.equal(cell('Member 1 Relation'), 'Spouse')
+  assert.equal(cell('Member 1 Disease Mode'), 'notApplicable')
+  assert.equal(cell('Member 1 Diseases'), '')
+  assert.equal(cell('Member 1 Other Disease'), '')
+  assert.equal(cell('Member 2 Relation'), 'Mother')
+  assert.equal(cell('Member 2 Diseases'), 'BP')
+  assert.equal(cell('Member 3 Diseases'), '')
+})

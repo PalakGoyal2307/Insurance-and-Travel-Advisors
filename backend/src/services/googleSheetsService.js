@@ -407,7 +407,7 @@ const ensureSheetHeaders = async (sheets, spreadsheetId, sheetName, headers) => 
     return mergedHeaders
   } catch (error) {
     console.error('Failed to initialize Google Sheets headers:', error)
-    return normalizedHeaders
+    throw error
   }
 }
 
@@ -432,7 +432,7 @@ export const appendFormSubmission = async ({ formType, payload }) => {
     : await ensureSheetHeaders(sheets, spreadsheetId, sheetName, Object.keys(values))
   const row = headers.map((header) => values[header] ?? '')
 
-  await sheets.spreadsheets.values.append({
+  const appendResponse = await sheets.spreadsheets.values.append({
     spreadsheetId,
     range: `${quoteSheetName(sheetName)}!A:${columnLetter(headers.length)}`,
     valueInputOption: 'RAW',
@@ -442,9 +442,14 @@ export const appendFormSubmission = async ({ formType, payload }) => {
     },
   })
 
+  if (appendResponse.data.updates?.updatedRows !== 1) {
+    throw new Error(`Google Sheets did not confirm appending a row to ${sheetName}`)
+  }
+
   return {
     spreadsheetId,
     sheetName,
+    updatedRange: appendResponse.data.updates.updatedRange,
   }
 }
 

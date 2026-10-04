@@ -752,7 +752,7 @@ export default function InsuranceFormPage({
                   }))
                 }
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm"
-                placeholder="Primary Member Pincode*"
+                placeholder="Pincode*"
                 inputMode="numeric"
                 pattern="\d{6}"
                 required
