@@ -240,7 +240,10 @@ export default function MemberInsuranceModal({
   onSubmit,
 }: Props) {
   const [proposerType, setProposerType] = useState<'self' | 'others'>('self')
-  const [proposerSequence] = useState(Math.max(1, Number(nextProposerSequence) || 1))
+  // This value is loaded asynchronously with the authenticated user's profile.
+  // Keep it derived from the current prop instead of capturing the initial
+  // default (1) when this form first mounts.
+  const proposerSequence = Math.max(1, Number(nextProposerSequence) || 1)
   const [contactEmail, setContactEmail] = useState(prefillUser?.email || '')
   const [contactPhone, setContactPhone] = useState(prefillUser?.phone || '')
   const [additionalProposers, setAdditionalProposers] = useState<Array<Omit<AdditionalProposerPayload, 'sequence'>>>([])

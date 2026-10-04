@@ -172,6 +172,8 @@ export default function InsuranceFormPage({
     ProfileDocumentItem[]
   >([]);
   const [nextProposerSequence, setNextProposerSequence] = useState(1);
+  const [profileReady, setProfileReady] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   const [requirements, setRequirements] = useState<RequirementItem[]>([]);
   const [form, setForm] = useState<GeneralFormState>({
     fullName: currentUser?.fullName || "",
@@ -195,6 +197,8 @@ export default function InsuranceFormPage({
     }
 
     const bootstrap = async () => {
+      setProfileReady(false);
+      setProfileLoadError(false);
       try {
         const profile = await getMyProfile();
         setExistingDocuments(profile.uploadedDocuments || []);
@@ -206,8 +210,10 @@ export default function InsuranceFormPage({
         );
       } catch (_error) {
         setExistingDocuments([]);
-        setNextProposerSequence(1);
+        setProfileLoadError(true);
         setRequirements([]);
+      } finally {
+        setProfileReady(true);
       }
     };
 
@@ -560,6 +566,26 @@ export default function InsuranceFormPage({
 
   if (!authReady || !currentUser) {
     return null;
+  }
+
+  if (!profileReady) {
+    return (
+      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="max-w-4xl mx-auto rounded-2xl border border-blue-100 bg-white p-6 text-sm text-gray-600 shadow-sm">
+          Loading your saved proposer information...
+        </div>
+      </div>
+    );
+  }
+
+  if (profileLoadError) {
+    return (
+      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="max-w-4xl mx-auto rounded-2xl border border-red-100 bg-white p-6 text-sm text-red-700 shadow-sm">
+          Unable to load your saved proposer information. Please refresh and try again.
+        </div>
+      </div>
+    );
   }
 
   if (action.startsWith("health-")) {
